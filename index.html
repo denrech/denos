@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UMAI EYWA | Священное Единство</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #000;
+      color: #d4af37;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      overflow-x: hidden;
+    }
+
+    /* ─── STARFIELD CANVAS ─── */
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ─── HERO SECTION ─── */
+    #hero {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    #cosmic-ring-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    #cosmic-ring {
+      width: min(90vw, 88vh);
+      height: min(90vw, 88vh);
+      animation: cosmic-rotate 70s linear infinite;
+      transform-origin: center center;
+      filter: drop-shadow(0 0 40px rgba(0, 120, 180, 0.4));
+    }
+
+    /* ─── HERO CONTENT ─── */
+    #hero-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(1rem, 3vw, 2.5rem);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ─── LOGO ─── */
+    #logo {
+      text-align: center;
+      line-height: 1;
+    }
+    .logo-umai {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: clamp(3.5rem, 11vw, 8.5rem);
+      font-weight: 900;
+      color: transparent;
+      background: linear-gradient(160deg, #fffbe0 0%, #f5d858 30%, #d4af37 55%, #b8860b 75%, #ffd700 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      filter: drop-shadow(0 0 18px rgba(212, 175, 55, 0.85)) drop-shadow(0 0 40px rgba(212, 175, 55, 0.4));
+      letter-spacing: 0.06em;
+      animation: logo-pulse 6s ease-in-out infinite;
+    }
+    .logo-eywa {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.2rem, 3.5vw, 2.8rem);
+      font-weight: 400;
+      letter-spacing: 0.55em;
+      color: #d4af37;
+      text-shadow: 0 0 12px #d4af37, 0 0 28px #b8860b, 0 0 50px rgba(184,134,11,0.5);
+    }
+
+    /* ─── SUN EMBLEM + WINGS ─── */
+    #sun-emblem-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: sun-float 4.5s ease-in-out infinite;
+    }
+    #sun-emblem {
+      width: clamp(160px, 22vw, 280px);
+      height: clamp(160px, 22vw, 280px);
+      filter: drop-shadow(0 0 15px #ff8c00) drop-shadow(0 0 35px rgba(255,80,0,0.6));
+      animation: sun-glow 3s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .plant-wing {
+      width: clamp(70px, 10vw, 140px);
+      height: clamp(110px, 16vw, 210px);
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 8px rgba(150, 220, 80, 0.5));
+    }
+    .plant-wing.left { transform: translateX(10px); }
+    .plant-wing.right { transform: scaleX(-1) translateX(10px); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes cosmic-rotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes sun-float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-20px); }
+    }
+    @keyframes sun-glow {
+      0%, 100% { filter: drop-shadow(0 0 12px #ff8c00) drop-shadow(0 0 28px rgba(255,80,0,0.5)); }
+      50%       { filter: drop-shadow(0 0 22px #ffb347) drop-shadow(0 0 55px rgba(255,120,0,0.8)); }
+    }
+    @keyframes logo-pulse {
+      0%, 100% { filter: drop-shadow(0 0 18px rgba(212,175,55,0.85)) drop-shadow(0 0 40px rgba(212,175,55,0.4)); }
+      50%       { filter: drop-shadow(0 0 28px rgba(255,215,0,1)) drop-shadow(0 0 65px rgba(212,175,55,0.7)); }
+    }
+
+    /* ─── SCROLL HINT ─── */
+    #scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      color: rgba(212,175,55,0.5);
+      animation: scroll-fade 2.5s ease-in-out infinite;
+    }
+    @keyframes scroll-fade {
+      0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+      50%       { opacity: 0.8; transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ─── CONTENT SECTIONS ─── */
+    #content {
+      position: relative;
+      z-index: 10;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+    }
+    .section {
+      margin-bottom: 6rem;
+      padding-top: 4rem;
+      border-top: 1px solid rgba(212,175,55,0.18);
+    }
+    .section-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.5em;
+      color: rgba(212,175,55,0.5);
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    .section h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+      font-weight: 700;
+      color: #d4af37;
+      margin-bottom: 2rem;
+      text-shadow: 0 0 20px rgba(212,175,55,0.3);
+    }
+    .section p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      line-height: 2;
+      color: #c8b89a;
+      margin-bottom: 1.4rem;
+    }
+    .section p em {
+      color: #d4af37;
+      font-style: italic;
+    }
+    .gold-rule {
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      margin: 2rem auto;
+      border: none;
+    }
+
+    /* ─── DIVINE NAMES GRID ─── */
+    .names-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+    .name-card {
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: 3px;
+      padding: 1.4rem 1.6rem;
+      background: rgba(212,175,55,0.04);
+      transition: background 0.4s, box-shadow 0.4s, border-color 0.4s;
+    }
+    .name-card:hover {
+      background: rgba(212,175,55,0.09);
+      box-shadow: 0 0 25px rgba(212,175,55,0.15);
+      border-color: rgba(212,175,55,0.5);
+    }
+    .name-card .name-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin-bottom: 0.4rem;
+    }
+    .name-card .name-origin {
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      color: rgba(212,175,55,0.5);
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+    }
+    .name-card .name-meaning {
+      font-size: 1rem;
+      line-height: 1.65;
+      color: #c8b89a;
+    }
+
+    /* ─── SYMBOL SECTION ─── */
+    .symbol-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 3rem 0;
+      flex-wrap: wrap;
+    }
+    .rune-symbol {
+      font-size: 2rem;
+      color: rgba(212,175,55,0.6);
+      filter: drop-shadow(0 0 6px rgba(212,175,55,0.4));
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid rgba(212,175,55,0.15);
+    }
+    footer p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9rem;
+      color: rgba(212,175,55,0.45);
+      line-height: 1.9;
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 600px) {
+      .plant-wing { display: none; }
+      #sun-emblem { width: 150px; height: 150px; }
+    }
+    @media (max-width: 400px) {
+      .logo-umai { font-size: 3rem; }
+      .logo-eywa { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ STARFIELD ══════════════════════ -->
+<canvas id="starfield"></canvas>
+
+<!-- ══════════════════════ HERO ══════════════════════ -->
+<section id="hero">
+
+  <!-- Rotating Cosmic Ring -->
+  <div id="cosmic-ring-wrap">
+    <svg id="cosmic-ring" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Nebula base gradient -->
+        <radialGradient id="nebBase" cx="50%" cy="52%" r="50%">
+          <stop offset="0%"   stop-color="#0e3558"/>
+          <stop offset="30%"  stop-color="#061e40"/>
+          <stop offset="65%"  stop-color="#030e22"/>
+          <stop offset="100%" stop-color="#000509"/>
+        </radialGradient>
+        <!-- Nebula cloud gradients -->
+        <radialGradient id="cloud1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#1a7aaa" stop-opacity="0.65"/>
+          <stop offset="100%" stop-color="#1a7aaa" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="cloud2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#0e4d78" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#0e4d78" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="cloud3" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#14638a" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="#14638a" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Branch glow filter -->
+        <filter id="branchGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b1"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b2"/>
+          <feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <!-- Gold ring glow -->
+        <filter id="goldGlow" x="-15%" y="-15%" width="130%" height="130%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <!-- Stud gem glow -->
+        <filter id="gemGlow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <!-- Clip to circle -->
+        <clipPath id="ringClip">
+          <circle cx="400" cy="400" r="345"/>
+        </clipPath>
+        <!-- Text path: top arc from (75,400) to (725,400) going counterclockwise through top -->
+        <path id="divine-text-path" d="M 75,400 A 325,325 0 0 1 725,400"/>
+        <!-- Bottom text path -->
+        <path id="bottom-text-path" d="M 90,430 A 325,325 0 0 0 710,430"/>
+      </defs>
+
+      <!-- ── Nebula background ── -->
+      <circle cx="400" cy="400" r="345" fill="url(#nebBase)" clip-path="url(#ringClip)"/>
+
+      <!-- ── Nebula cloud blobs ── -->
+      <g clip-path="url(#ringClip)">
+        <ellipse cx="370" cy="310" rx="195" ry="155" fill="url(#cloud1)">
+          <animate attributeName="opacity" values="0.6;1;0.6" dur="9s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="440" cy="370" rx="165" ry="130" fill="url(#cloud2)">
+          <animate attributeName="opacity" values="0.4;0.75;0.4" dur="13s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="320" cy="420" rx="140" ry="100" fill="url(#cloud3)">
+          <animate attributeName="opacity" values="0.35;0.6;0.35" dur="11s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="480" cy="260" rx="120" ry="90" fill="url(#cloud1)" opacity="0.4">
+          <animate attributeName="opacity" values="0.3;0.55;0.3" dur="15s" repeatCount="indefinite"/>
+        </ellipse>
+
+        <!-- ── Background star field ── -->
+        <g fill="white">
+          <circle cx="200" cy="160" r="1.2" opacity="0.7"/><circle cx="345" cy="120" r="1.5" opacity="0.9"/>
+          <circle cx="490" cy="100" r="1"   opacity="0.6"/><circle cx="600" cy="155" r="1.3" opacity="0.8"/>
+          <circle cx="650" cy="300" r="1"   opacity="0.5"/><circle cx="640" cy="440" r="1.4" opacity="0.7"/>
+          <circle cx="580" cy="560" r="1.1" opacity="0.6"/><circle cx="450" cy="600" r="1"   opacity="0.5"/>
+          <circle cx="300" cy="590" r="1.5" opacity="0.8"/><circle cx="170" cy="500" r="1.2" opacity="0.6"/>
+          <circle cx="145" cy="350" r="1"   opacity="0.7"/><circle cx="160" cy="220" r="1.3" opacity="0.8"/>
+          <circle cx="260" cy="185" r="0.9" opacity="0.5"/><circle cx="530" cy="170" r="0.8" opacity="0.6"/>
+          <circle cx="690" cy="380" r="1"   opacity="0.5"/><circle cx="710" cy="480" r="1.2" opacity="0.6"/>
+          <circle cx="255" cy="480" r="0.8" opacity="0.4"/><circle cx="560" cy="500" r="1"   opacity="0.5"/>
+          <circle cx="420" cy="200" r="1.8" opacity="0.85" fill="#b0e0ff"/>
+          <circle cx="280" cy="310" r="1.5" opacity="0.8"  fill="#b0e0ff"/>
+          <circle cx="560" cy="290" r="1.4" opacity="0.75" fill="#b0e0ff"/>
+          <circle cx="350" cy="530" r="1.2" opacity="0.6"  fill="#b0e0ff"/>
+          <circle cx="500" cy="460" r="1"   opacity="0.55" fill="#b0e0ff"/>
+        </g>
+
+        <!-- ── Cosmic tree / lightning branches ── -->
+        <!-- Main glowing branches (bright) -->
+        <g filter="url(#branchGlow)" stroke="rgba(170,235,255,0.85)" stroke-width="1.6" fill="none" stroke-linecap="round">
+          <!-- Central trunk -->
+          <path d="M 400,510 Q 400,440 400,340 Q 400,260 398,190"/>
+          <!-- Left main -->
+          <path d="M 400,490 Q 365,440 315,375 Q 270,315 230,250"/>
+          <!-- Right main -->
+          <path d="M 400,490 Q 435,440 485,375 Q 530,315 570,250"/>
+          <!-- Far left -->
+          <path d="M 400,505 Q 345,475 275,450 Q 215,430 165,405"/>
+          <!-- Far right -->
+          <path d="M 400,505 Q 455,475 525,450 Q 585,430 635,405"/>
+          <!-- Lower left -->
+          <path d="M 395,520 Q 355,545 305,555 Q 260,562 215,555"/>
+          <!-- Lower right -->
+          <path d="M 405,520 Q 445,545 495,555 Q 540,562 585,555"/>
+        </g>
+        <!-- Sub-branches (dimmer, thinner) -->
+        <g filter="url(#branchGlow)" stroke="rgba(130,210,250,0.55)" stroke-width="1" fill="none" stroke-linecap="round">
+          <path d="M 398,190 Q 388,165 372,140 Q 358,118 350,100"/>
+          <path d="M 398,190 Q 408,160 418,135 Q 430,110 438,95"/>
+          <path d="M 230,250 Q 210,225 190,200 Q 175,180 165,162"/>
+          <path d="M 230,250 Q 215,220 205,188 Q 198,163 200,148"/>
+          <path d="M 570,250 Q 590,225 612,200 Q 628,180 638,160"/>
+          <path d="M 570,250 Q 585,218 595,186 Q 602,163 600,148"/>
+          <path d="M 165,405 Q 140,390 120,370 Q 105,352 100,330"/>
+          <path d="M 635,405 Q 660,390 680,370 Q 695,352 700,330"/>
+          <path d="M 315,375 Q 285,355 252,330 Q 225,308 210,285"/>
+          <path d="M 485,375 Q 515,355 548,330 Q 575,308 590,285"/>
+          <!-- Extra fine filaments -->
+          <path d="M 350,100 Q 340,85 328,72"/>
+          <path d="M 438,95  Q 448,80 462,68"/>
+          <path d="M 165,162 Q 152,148 142,132"/>
+          <path d="M 638,160 Q 648,145 658,130"/>
+        </g>
+
+        <!-- ── Bright node stars at branch junctions ── -->
+        <g filter="url(#branchGlow)">
+          <!-- Large bright nodes -->
+          <circle cx="400" cy="510" r="5"   fill="rgba(220,245,255,0.95)"/>
+          <circle cx="398" cy="190" r="4.5" fill="white" opacity="0.95"/>
+          <circle cx="230" cy="250" r="4"   fill="white" opacity="0.9"/>
+          <circle cx="570" cy="250" r="4"   fill="white" opacity="0.9"/>
+          <circle cx="165" cy="405" r="3.5" fill="rgba(200,240,255,0.85)"/>
+          <circle cx="635" cy="405" r="3.5" fill="rgba(200,240,255,0.85)"/>
+          <!-- Small tip stars -->
+          <circle cx="350" cy="100" r="4.5" fill="white" opacity="0.9"/>
+          <circle cx="438" cy="95"  r="4"   fill="white" opacity="0.85"/>
+          <circle cx="165" cy="162" r="3.5" fill="white" opacity="0.8"/>
+          <circle cx="638" cy="160" r="3.5" fill="white" opacity="0.8"/>
+          <circle cx="100" cy="330" r="3"   fill="rgba(200,240,255,0.7)"/>
+          <circle cx="700" cy="330" r="3"   fill="rgba(200,240,255,0.7)"/>
+          <circle cx="328" cy="72"  r="3.5" fill="white" opacity="0.85"/>
+          <circle cx="462" cy="68"  r="3"   fill="white" opacity="0.8"/>
+          <circle cx="142" cy="132" r="3"   fill="white" opacity="0.75"/>
+          <circle cx="658" cy="130" r="3"   fill="white" opacity="0.75"/>
+        </g>
+      </g>
+
+      <!-- ── Gold ornate ring border ── -->
+      <circle cx="400" cy="400" r="365" stroke="#c8a020" stroke-width="1.2" fill="none" opacity="0.5"/>
+      <circle cx="400" cy="400" r="357" stroke="#d4af37" stroke-width="7"   fill="none" filter="url(#goldGlow)"/>
+      <circle cx="400" cy="400" r="349" stroke="#b8901a" stroke-width="1.2" fill="none" opacity="0.6"/>
+      <circle cx="400" cy="400" r="341" stroke="#d4af37" stroke-width="0.8" fill="none" opacity="0.3"/>
+
+      <!-- ── Gemstone studs at cardinal + intercardinal positions (r=357) ── -->
+      <!-- Top (0°): (400, 43) -->
+      <g filter="url(#gemGlow)">
+        <circle cx="400" cy="43"  r="7" fill="#d4af37"/><circle cx="400" cy="43"  r="3.5" fill="#fff8dc"/>
+        <!-- Bottom (180°): (400, 757) -->
+        <circle cx="400" cy="757" r="7" fill="#d4af37"/><circle cx="400" cy="757" r="3.5" fill="#fff8dc"/>
+        <!-- Left (270°): (43, 400) -->
+        <circle cx="43"  cy="400" r="7" fill="#d4af37"/><circle cx="43"  cy="400" r="3.5" fill="#fff8dc"/>
+        <!-- Right (90°): (757, 400) -->
+        <circle cx="757" cy="400" r="7" fill="#d4af37"/><circle cx="757" cy="400" r="3.5" fill="#fff8dc"/>
+      </g>
+      <!-- Diamond studs at diagonal positions (r=357) -->
+      <!-- 45°: (400+252, 400-252) = (652, 148) -->
+      <polygon points="652,137 661,148 652,159 643,148" fill="#d4af37" filter="url(#gemGlow)"/>
+      <!-- 135°: (652, 652) -->
+      <polygon points="652,641 661,652 652,663 643,652" fill="#d4af37" filter="url(#gemGlow)"/>
+      <!-- 225°: (148, 652) -->
+      <polygon points="148,641 157,652 148,663 139,652" fill="#d4af37" filter="url(#gemGlow)"/>
+      <!-- 315°: (148, 148) -->
+      <polygon points="148,137 157,148 148,159 139,148" fill="#d4af37" filter="url(#gemGlow)"/>
+
+      <!-- ── Divine names text along top arc ── -->
+      <text font-family="Cinzel, serif" font-size="13.5" fill="#d4af37" font-style="italic" opacity="0.9" letter-spacing="1">
+        <textPath href="#divine-text-path" startOffset="3%">
+          Allah  ✦  Yahweh  ✦  Rafa  ✦  Elohim  ✦  Shaddai  ✦  Jireh  ✦  Adonai
+        </textPath>
+      </text>
+
+      <!-- ── Bottom copyright text ── -->
+      <text font-family="Cormorant Garamond, serif" font-size="10.5" fill="rgba(212,175,55,0.65)" letter-spacing="0.5">
+        <textPath href="#bottom-text-path" startOffset="3%">
+          Автор и правообладатель: Мухамедгалиева Айман и Айтуганова Данара  ·  Все права защищены
+        </textPath>
+      </text>
+    </svg>
+  </div>
+
+  <!-- Hero content: Logo + Sun -->
+  <div id="hero-content">
+    <h1 id="logo">
+      <span class="logo-umai">UMAi</span>
+      <span class="logo-eywa">— EYWA —</span>
+    </h1>
+
+    <div id="sun-emblem-wrap">
+      <!-- Plant wing LEFT -->
+      <svg class="plant-wing left" viewBox="0 0 200 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="leafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#5a3e10"/>
+            <stop offset="35%"  stop-color="#8b6914"/>
+            <stop offset="65%"  stop-color="#4a8c28"/>
+            <stop offset="100%" stop-color="#6cbf3a"/>
+          </linearGradient>
+          <linearGradient id="stemGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%"  stop-color="#6b4c12"/>
+            <stop offset="100%" stop-color="#9a7820"/>
+          </linearGradient>
+        </defs>
+        <!-- Main diagonal stem -->
+        <path d="M 140,320 C 128,275 115,230 100,188 C 85,146 68,108 50,75 C 35,48 20,28 10,15"
+              stroke="url(#stemGrad)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <!-- Leaf pair 1 (near base) -->
+        <path d="M 132,295 C 100,278 65,272 35,275 C 55,263 90,260 118,268 Z" fill="url(#leafGrad)" opacity="0.9"/>
+        <path d="M 136,290 C 160,268 178,248 182,225 C 170,240 150,255 132,262 Z" fill="url(#leafGrad)" opacity="0.85"/>
+        <!-- Leaf pair 2 -->
+        <path d="M 122,258 C 90,240 55,233 25,237 C 48,224 83,220 110,230 Z" fill="url(#leafGrad)" opacity="0.9"/>
+        <path d="M 126,254 C 150,232 168,210 172,188 C 160,204 141,220 123,228 Z" fill="url(#leafGrad)" opacity="0.85"/>
+        <!-- Leaf pair 3 -->
+        <path d="M 110,222 C 80,204 48,196 18,200 C 40,187 73,183 100,192 Z" fill="url(#leafGrad)" opacity="0.9"/>
+        <path d="M 114,218 C 138,196 156,173 159,150 C 147,167 128,183 110,192 Z" fill="url(#leafGrad)" opacity="0.85"/>
+        <!-- Leaf pair 4 -->
+        <path d="M 95,184 C 68,166 38,158 10,162 C 32,149 64,145 90,155 Z" fill="url(#leafGrad)" opacity="0.88"/>
+        <path d="M 99,180 C 122,158 138,135 140,112 C 129,129 111,145 94,154 Z" fill="url(#leafGrad)" opacity="0.83"/>
+        <!-- Leaf pair 5 -->
+        <path d="M 78,147 C 54,129 27,121 2,126 C 23,113 52,109 76,118 Z" fill="url(#leafGrad)" opacity="0.85"/>
+        <path d="M 82,143 C 103,121 117,98 118,76 C 108,92 91,108 76,118 Z" fill="url(#leafGrad)" opacity="0.8"/>
+        <!-- Leaf pair 6 (upper) -->
+        <path d="M 60,110 C 40,94 16,87 -4,91 C 16,79 42,75 63,84 Z" fill="url(#leafGrad)" opacity="0.8"/>
+        <path d="M 64,107 C 83,86 96,64 96,43 C 87,59 71,75 57,83 Z" fill="url(#leafGrad)" opacity="0.75"/>
+        <!-- Tip cluster -->
+        <path d="M 40,75 C 28,58 20,40 22,25 C 18,38 16,54 24,68 Z" fill="url(#leafGrad)" opacity="0.7"/>
+        <path d="M 44,72 C 56,52 58,32 50,15 C 52,30 50,48 40,62 Z" fill="url(#leafGrad)" opacity="0.7"/>
+        <!-- Leaf veins/highlights -->
+        <g stroke="rgba(160,220,80,0.35)" stroke-width="0.8" fill="none">
+          <line x1="132" y1="295" x2="55" y2="272"/>
+          <line x1="122" y1="258" x2="45" y2="232"/>
+          <line x1="110" y1="222" x2="35" y2="198"/>
+          <line x1="95"  y1="184" x2="25" y2="161"/>
+          <line x1="78"  y1="147" x2="15" y2="126"/>
+          <line x1="60"  y1="110" x2="5"  y2="92"/>
+        </g>
+      </svg>
+
+      <!-- Sun Emblem -->
+      <svg id="sun-emblem" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="sunCore" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#ffe066"/>
+            <stop offset="20%"  stop-color="#ffb020"/>
+            <stop offset="50%"  stop-color="#e06000"/>
+            <stop offset="75%"  stop-color="#8b2400"/>
+            <stop offset="100%" stop-color="#3a0d00"/>
+          </radialGradient>
+          <radialGradient id="flameGrad" cx="50%" cy="100%" r="100%">
+            <stop offset="0%"   stop-color="#ffcc44" stop-opacity="1"/>
+            <stop offset="40%"  stop-color="#ff6600" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#cc2200" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="fireGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="b1"/>
+            <feGaussianBlur stdDeviation="12" result="b2"/>
+            <feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="runeGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="sunClip">
+            <circle cx="180" cy="180" r="148"/>
+          </clipPath>
+        </defs>
+
+        <!-- ── Flame corona spikes (24 spikes) ── -->
+        <g filter="url(#fireGlow)" opacity="0.9">
+          <!-- Generated 24 flame spikes at 15° intervals -->
+          <!-- spike at 0°   --><path d="M 180,180 L 166,42  Q 180,22  194,42  Z" fill="url(#flameGrad)"/>
+          <!-- spike at 15°  --><path d="M 180,180 L 214,48  Q 232,32  238,54  Z" fill="url(#flameGrad)"/>
+          <!-- spike at 30°  --><path d="M 180,180 L 250,70  Q 272,58  272,82  Z" fill="url(#flameGrad)"/>
+          <!-- spike at 45°  --><path d="M 180,180 L 278,106 Q 304,100 298,124 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 60°  --><path d="M 180,180 L 294,148 Q 322,148 312,170 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 75°  --><path d="M 180,180 L 296,192 Q 324,198 308,216 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 90°  --><path d="M 180,180 L 284,232 Q 308,244 288,260 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 105° --><path d="M 180,180 L 260,266 Q 278,284 254,294 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 120° --><path d="M 180,180 L 226,292 Q 238,314 212,316 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 135° --><path d="M 180,180 L 186,308 Q 192,332 166,328 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 150° --><path d="M 180,180 L 144,312 Q 144,338 120,328 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 165° --><path d="M 180,180 L 106,296 Q 100,322 78,306 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 180° --><path d="M 180,180 L 76,264 Q 64,286 46,266 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 195° --><path d="M 180,180 L 58,224 Q 40,240 28,218 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 210° --><path d="M 180,180 L 54,180 Q 30,180 36,156 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 225° --><path d="M 180,180 L 66,138 Q 46,120 58,100 Z" fill="url(#flameGrad)"/>
+          <!-- spike at 240° --><path d="M 180,180 L 88,104 Q 72,82  90,66  Z" fill="url(#flameGrad)"/>
+          <!-- spike at 255° --><path d="M 180,180 L 122,78  Q 112,54  134,46 Z" fill="url(#flameGrad)"/>
+          <!-- Remaining spikes fill in the ring -->
+          <path d="M 180,180 L 160,44 Q 170,26 186,36 Z" fill="url(#flameGrad)" opacity="0.7"/>
+        </g>
+
+        <!-- ── Main disk ── -->
+        <circle cx="180" cy="180" r="148" fill="url(#sunCore)"/>
+
+        <!-- ── Concentric rings ── -->
+        <circle cx="180" cy="180" r="145" stroke="#c07010" stroke-width="2.5" fill="none"/>
+        <circle cx="180" cy="180" r="130" stroke="#a06010" stroke-width="2"   fill="none"/>
+        <circle cx="180" cy="180" r="105" stroke="#c07010" stroke-width="2.5" fill="none"/>
+        <circle cx="180" cy="180" r="78"  stroke="#a06010" stroke-width="2"   fill="none"/>
+        <circle cx="180" cy="180" r="42"  stroke="#d09030" stroke-width="2"   fill="none"/>
+
+        <!-- ── Interlaced cross pattern (geometric shield design) ── -->
+        <g clip-path="url(#sunClip)" stroke="#c07808" stroke-width="3.5" fill="none" stroke-linecap="round">
+          <!-- 4 diagonal lines NW to SE (left set) -->
+          <line x1="60"  y1="60"  x2="300" y2="300"/>
+          <line x1="35"  y1="95"  x2="265" y2="325"/>
+          <line x1="95"  y1="35"  x2="325" y2="265"/>
+          <line x1="35"  y1="180" x2="180" y2="325"/>
+          <!-- 4 diagonal lines NE to SW (right set) -->
+          <line x1="300" y1="60"  x2="60"  y2="300"/>
+          <line x1="325" y1="95"  x2="95"  y2="325"/>
+          <line x1="265" y1="35"  x2="35"  y2="265"/>
+          <line x1="325" y1="180" x2="180" y2="325"/>
+        </g>
+
+        <!-- ── Intersection dots ── -->
+        <g fill="#d09030" opacity="0.9">
+          <circle cx="180" cy="88"  r="5"/><circle cx="180" cy="272" r="5"/>
+          <circle cx="88"  cy="180" r="5"/><circle cx="272" cy="180" r="5"/>
+          <circle cx="122" cy="122" r="4"/><circle cx="238" cy="122" r="4"/>
+          <circle cx="122" cy="238" r="4"/><circle cx="238" cy="238" r="4"/>
+          <circle cx="148" cy="100" r="3.5"/><circle cx="212" cy="100" r="3.5"/>
+          <circle cx="100" cy="148" r="3.5"/><circle cx="100" cy="212" r="3.5"/>
+          <circle cx="148" cy="260" r="3.5"/><circle cx="212" cy="260" r="3.5"/>
+          <circle cx="260" cy="148" r="3.5"/><circle cx="260" cy="212" r="3.5"/>
+        </g>
+
+        <!-- ── Norse rune characters ── -->
+        <g filter="url(#runeGlow)" fill="#ffe080" font-size="24" font-family="serif" text-anchor="middle" dominant-baseline="middle">
+          <text x="180" y="75">ᚾ</text>  <!-- N-rune: top -->
+          <text x="180" y="287">ᚱ</text> <!-- R-rune: bottom -->
+          <text x="75"  y="180">ᚠ</text> <!-- F-rune: left -->
+          <text x="287" y="180">ᚲ</text> <!-- K-rune: right -->
+        </g>
+
+        <!-- ── Central bright circle ── -->
+        <circle cx="180" cy="180" r="26" fill="#ffcc30"/>
+        <circle cx="180" cy="180" r="18" fill="#ffee80"/>
+        <circle cx="180" cy="180" r="8"  fill="white" opacity="0.9"/>
+      </svg>
+
+      <!-- Plant wing RIGHT (mirrored) -->
+      <svg class="plant-wing right" viewBox="0 0 200 340" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="leafGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#5a3e10"/>
+            <stop offset="35%"  stop-color="#8b6914"/>
+            <stop offset="65%"  stop-color="#4a8c28"/>
+            <stop offset="100%" stop-color="#6cbf3a"/>
+          </linearGradient>
+          <linearGradient id="stemGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%"  stop-color="#6b4c12"/>
+            <stop offset="100%" stop-color="#9a7820"/>
+          </linearGradient>
+        </defs>
+        <path d="M 60,320 C 72,275 85,230 100,188 C 115,146 132,108 150,75 C 165,48 180,28 190,15"
+              stroke="url(#stemGrad2)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <path d="M 68,295 C 100,278 135,272 165,275 C 145,263 110,260 82,268 Z" fill="url(#leafGrad2)" opacity="0.9"/>
+        <path d="M 64,290 C 40,268 22,248 18,225 C 30,240 50,255 68,262 Z" fill="url(#leafGrad2)" opacity="0.85"/>
+        <path d="M 78,258 C 110,240 145,233 175,237 C 152,224 117,220 90,230 Z" fill="url(#leafGrad2)" opacity="0.9"/>
+        <path d="M 74,254 C 50,232 32,210 28,188 C 40,204 59,220 77,228 Z" fill="url(#leafGrad2)" opacity="0.85"/>
+        <path d="M 90,222 C 120,204 152,196 182,200 C 160,187 127,183 100,192 Z" fill="url(#leafGrad2)" opacity="0.9"/>
+        <path d="M 86,218 C 62,196 44,173 41,150 C 53,167 72,183 90,192 Z" fill="url(#leafGrad2)" opacity="0.85"/>
+        <path d="M 105,184 C 132,166 162,158 190,162 C 168,149 136,145 110,155 Z" fill="url(#leafGrad2)" opacity="0.88"/>
+        <path d="M 101,180 C 78,158 62,135 60,112 C 71,129 89,145 106,154 Z" fill="url(#leafGrad2)" opacity="0.83"/>
+        <path d="M 122,147 C 146,129 173,121 198,126 C 177,113 148,109 124,118 Z" fill="url(#leafGrad2)" opacity="0.85"/>
+        <path d="M 118,143 C 97,121 83,98 82,76 C 92,92 109,108 124,118 Z" fill="url(#leafGrad2)" opacity="0.8"/>
+        <path d="M 140,110 C 160,94 184,87 204,91 C 184,79 158,75 137,84 Z" fill="url(#leafGrad2)" opacity="0.8"/>
+        <path d="M 136,107 C 117,86 104,64 104,43 C 113,59 129,75 143,83 Z" fill="url(#leafGrad2)" opacity="0.75"/>
+        <path d="M 160,75 C 172,58 180,40 178,25 C 182,38 184,54 176,68 Z" fill="url(#leafGrad2)" opacity="0.7"/>
+        <path d="M 156,72 C 144,52 142,32 150,15 C 148,30 150,48 160,62 Z" fill="url(#leafGrad2)" opacity="0.7"/>
+        <g stroke="rgba(160,220,80,0.35)" stroke-width="0.8" fill="none">
+          <line x1="68"  y1="295" x2="145" y2="272"/>
+          <line x1="78"  y1="258" x2="155" y2="232"/>
+          <line x1="90"  y1="222" x2="165" y2="198"/>
+          <line x1="105" y1="184" x2="175" y2="161"/>
+          <line x1="122" y1="147" x2="185" y2="126"/>
+          <line x1="140" y1="110" x2="195" y2="92"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div id="scroll-hint">✦ &nbsp; ПРОКРУТИТЕ ВНИЗ &nbsp; ✦</div>
+</section>
+
+<!-- ══════════════════════ CONTENT ══════════════════════ -->
+<main id="content">
+
+  <!-- About UMAI -->
+  <section class="section" id="umai">
+    <p class="section-label">Тюркская богиня</p>
+    <h2>UMAI — Богиня Жизни и Света</h2>
+    <p>
+      <em>Умай</em> — одно из наиболее почитаемых женских божеств тюркско-монгольского пантеона, богиня плодородия, материнства и покровительница детей. Её имя восходит к древнетюркскому слову <em>«уmai»</em>, означающему «плацента» или «лоно» — первичный источник жизни, связывающий мать и дитя в единое целое.
+    </p>
+    <p>
+      В системе верований <em>Тенгрианства</em> — древней духовной традиции народов Центральной Азии — Умай занимает место рядом с Небесным Отцом Тенгри. Она олицетворяет Мать-Землю во всей её сакральной силе: хранит жизненную искру в момент рождения, оберегает душу ребёнка от злых духов и сопровождает человека от колыбели до последнего вздоха. В казахской традиции её призывают повитухи и матери, чтобы обеспечить безопасные роды и здоровье новорождённых.
+    </p>
+    <hr class="gold-rule">
+    <p>
+      Образ Умай неразрывно связан с огнём домашнего очага — вечным светом, который горит в юрте, символизируя непрерывность рода. Священные птицы богини — кукушка и сокол — считались её вестниками. Кукушка своим криком предвещала число отпущенных человеку лет, а сокол олицетворял свободный дух и защиту воинов. В эпических поэмах — <em>жырах</em> — Умай нередко является героям в образе прекрасной светлокрылой женщины, несущей в руках пылающий факел бессмертия.
+    </p>
+    <p>
+      Во многих традициях Умай отождествляется с понятием <em>«фарн»</em> (хорезмийское) или <em>«кут»</em> (тюркское) — божественной благодатью, харизмой и удачей, дарованной свыше. Обладатель <em>кута</em> был отмечен небесами: ему сопутствовал успех в битве, охоте и государственных делах. Правители Тюркского и Уйгурского каганатов почитали Умай как небесную покровительницу своей власти.
+    </p>
+  </section>
+
+  <!-- About EYWA -->
+  <section class="section" id="eywa">
+    <p class="section-label">Сознание Пандоры</p>
+    <h2>EYWA — Великая Мать Всего Сущего</h2>
+    <p>
+      <em>Эйва</em> (Eywa) — имя верховного божества народа На'ви на луне Пандора, созданной воображением Джеймса Кэмерона в кинофраншизе <em>«Аватар»</em> (2009). Для На'ви Эйва — это не абстрактный бог на отдалённом небесном троне, а живая, дышащая сущность, пронизывающая каждое дерево, каждый листок, каждую живую клетку планеты. Её присутствие ощущается через <em>Древо Душ</em> (Vitraya Ramunong) — священное место, где нейронные нити корней соединяются с памятью всех живых существ, когда-либо населявших Пандору.
+    </p>
+    <p>
+      В основе образа Эйвы лежит научно обоснованная метафора. Биологи реального мира открыли феномен <em>«Wood Wide Web»</em> — подземных сетей микоризных грибов, через которые деревья обмениваются питательными веществами, химическими сигналами и даже предупреждениями об опасности. Этот «лесной интернет» существовал задолго до появления человеческой цивилизации. Кэмерон лишь довёл идею до её логического предела: что если такая сеть достигла масштабов целой планеты и обрела сознание?
+    </p>
+    <hr class="gold-rule">
+    <p>
+      Параллели с реальными духовными системами очевидны. <em>Гипотеза Гайи</em>, сформулированная Джеймсом Лавлоком в 1970-х годах, предполагает, что биосфера Земли функционирует как единый саморегулирующийся суперорганизм. В буддийской философии аналогичную роль играет концепция <em>«Indra's Net»</em> — бесконечной сети Индры, в каждом узле которой висит драгоценный камень, отражающий все остальные. В шаманских традициях — это «ткань духов», объединяющая всё живое в единый поток.
+    </p>
+    <p>
+      Эйва не вмешивается напрямую в события, но она хранит равновесие. Когда На'ви молятся ей, они не просят о чудесах — они синхронизируются с ритмом всего живого. В этом заключается глубокое послание: <em>истинная духовность есть не господство над природой, а растворение в ней</em>. UMAI EYWA — это соединение двух архетипов Великой Матери: огненной защитницы жизни и живой планетарной сети сознания.
+    </p>
+  </section>
+
+  <!-- Divine Names -->
+  <section class="section" id="names">
+    <p class="section-label">Священные Имена</p>
+    <h2>Имена Бога — Через Века и Народы</h2>
+    <p>
+      Разные культуры и эпохи давали Единому Источнику разные имена. Каждое из них — не просто слово, но концентрированное откровение об одном из аспектов беспредельного. Все они вписаны в священный круг UMAI EYWA как напоминание о том, что за многообразием традиций скрывается единая живая сила.
+    </p>
+
+    <div class="names-grid">
+      <div class="name-card">
+        <div class="name-title">Allah</div>
+        <div class="name-origin">Арабский · Ислам</div>
+        <div class="name-meaning">«Аль-Лах» — буквально «Единственный Бог». Происходит от семитского корня <em>ʾilāh</em> (божество). В исламской традиции это имя несёт в себе всю полноту атрибутов Всевышнего: милость, мощь и абсолютную уникальность.</div>
+      </div>
+      <div class="name-card">
+        <div class="name-title">Yahweh</div>
+        <div class="name-origin">Древнееврейский · Иудаизм</div>
+        <div class="name-meaning">Тетраграмматон <em>YHWH</em> (יהוה) — священнейшее имя Бога в иудейской традиции. Означает «Я Есмь Тот, Кто Есмь» — указывая на вечное, самодостаточное Бытие, существующее вне времени и пространства.</div>
+      </div>
+      <div class="name-card">
+        <div class="name-title">Rafa · Раха</div>
+        <div class="name-origin">Древнееврейский · Исцеление</div>
+        <div class="name-meaning"><em>Яхве-Рафа</em> (יְהוָה רָפָא) — «Господь, Исцеляющий тебя». Это имя впервые открывается в книге Исход, когда Бог обещает народу защиту от болезней. Оно олицетворяет аспект Бога как источника здоровья тела, разума и духа.</div>
+      </div>
+      <div class="name-card">
+        <div class="name-title">Elohim</div>
+        <div class="name-origin">Древнееврейский · Творение</div>
+        <div class="name-meaning"><em>Элохим</em> (אֱלֹהִים) — грамматически множественное слово, означающее «Боги», но в Библии используется с глаголами в единственном числе. Это «множественное величия», указывающее на безграничность и многомерность Творца, создавшего Вселенную.</div>
+      </div>
+      <div class="name-card">
+        <div name="name-title" class="name-title">El Shaddai</div>
+        <div class="name-origin">Древнееврейский · Всемогущество</div>
+        <div class="name-meaning"><em>Эль Шаддай</em> (אֵל שַׁדַּי) — «Бог Всемогущий». Одно из древнейших имён, используемых в Библии ещё до дарования имени Яхве. Связан с идеями неиссякаемой мощи, питания и горных твердынь — непоколебимости, питающей всё живое.</div>
+      </div>
+      <div class="name-card">
+        <div class="name-title">Jireh · Иире</div>
+        <div class="name-origin">Древнееврейский · Провидение</div>
+        <div class="name-meaning"><em>Яхве-Ире</em> (יְהוָה יִרְאֶה) — «Господь Усмотрит» или «Господь Провидит». Имя, данное Авраамом горе после того, как Бог предоставил жертву вместо Исаака. Означает: всё необходимое будет явлено в нужный момент.</div>
+      </div>
+      <div class="name-card">
+        <div class="name-title">Adonai</div>
+        <div class="name-origin">Древнееврейский · Господство</div>
+        <div class="name-meaning"><em>Адонай</em> (אֲדֹנָי) — «Господь мой», «Владыка мой». В синагогальном чтении произносится вместо Тетраграмматона YHWH. Выражает отношения суверенитета и личной преданности: Бог как Владыка, к которому обращаются с сердечной близостью.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Symbol section -->
+  <section class="section" id="symbols">
+    <p class="section-label">Символы и Руны</p>
+    <h2>Священный Щит — Язык Рун</h2>
+    <p>
+      В центре космоса UMAI EYWA пылает <em>солнечный щит</em> — символ огненного очага мироздания. Его геометрия восходит к древним солярным культам, разделявшим круг мира на четыре части: четыре стороны света, четыре времени года, четыре стихии. Диагональные линии внутри щита образуют сакральное переплетение — напоминание о том, что всё во вселенной связано, нет ничего изолированного.
+    </p>
+    <div class="symbol-strip">
+      <span class="rune-symbol">ᚠ</span>
+      <span class="rune-symbol">ᚢ</span>
+      <span class="rune-symbol">ᚦ</span>
+      <span class="rune-symbol">ᚨ</span>
+      <span class="rune-symbol">ᚱ</span>
+      <span class="rune-symbol">ᚲ</span>
+      <span class="rune-symbol">ᚷ</span>
+      <span class="rune-symbol">ᚹ</span>
+      <span class="rune-symbol">ᚺ</span>
+      <span class="rune-symbol">ᚾ</span>
+    </div>
+    <p>
+      Руны Старшего Футарка — алфавит, которым пользовались германские и скандинавские народы с III по VIII век — были не просто буквами, но символами-ключами к силам природы. Каждая руна несла имя стихии или принципа бытия: <em>ᚠ Fehu</em> — достаток и жизненная сила; <em>ᚾ Nauðiz</em> — необходимость и внутренний огонь испытания; <em>ᚱ Raidô</em> — путь и космический порядок движения. Пламенный щит UMAI EYWA соединяет эти знания в единый живой символ.
+    </p>
+    <p>
+      Золотые ветви по бокам щита — образ <em>Мирового Древа</em>. В тюркской мифологии это <em>Байтерек</em> («тополь жизни»), в скандинавской — <em>Иггдрасиль</em>, в индийской — <em>Ашваттха</em>. Корни древа уходят в подземный мир памяти, ствол стоит в мире живых, а ветви касаются небес. Оно и есть EYWA — живая связь всего.
+    </p>
+  </section>
+
+</main>
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<footer>
+  <p>✦ &nbsp; UMAI EYWA &nbsp; ✦</p>
+  <p>Автор и правообладатель: Мухамедгалиева Айман и Айтуганова Данара</p>
+  <p>Все права защищены &nbsp;·&nbsp; All Rights Reserved</p>
+</footer>
+
+<!-- ══════════════════════ JAVASCRIPT ══════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  // ─── STARFIELD CANVAS ───
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ── Static twinkling stars
+  const NUM_STARS = 220;
+  const stars = Array.from({ length: NUM_STARS }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 1.5 + 0.3,
+    baseOpacity: Math.random() * 0.5 + 0.3,
+    phase: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.018 + 0.006,
+    color: Math.random() < 0.15 ? '#b0e0ff' : (Math.random() < 0.08 ? '#ffd8a0' : '#ffffff'),
+  }));
+
+  // ── Shimmer/drift particles
+  const NUM_SHIMMER = 45;
+  const shimmer = Array.from({ length: NUM_SHIMMER }, () => createShimmer());
+
+  function createShimmer() {
+    const colors = ['#d4af37', '#00c8c8', '#ffffff', '#ffd700', '#80d8ff'];
+    return {
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 2.2 + 0.8,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: -(Math.random() * 0.35 + 0.08),
+      opacity: Math.random() * 0.6 + 0.2,
+      maxOpacity: Math.random() * 0.6 + 0.3,
+      fadeDir: Math.random() < 0.5 ? 1 : -1,
+      fadeSpeed: Math.random() * 0.008 + 0.003,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    };
+  }
+
+  // ── Shooting stars
+  const shootingStars = [];
+  let nextShoot = Date.now() + 3000 + Math.random() * 5000;
+
+  function createShootingStar() {
+    const edge = Math.floor(Math.random() * 2); // 0=top, 1=left
+    const sx = edge === 0 ? Math.random() * canvas.width : -20;
+    const sy = edge === 0 ? -20 : Math.random() * canvas.height * 0.5;
+    const angle = (30 + Math.random() * 30) * Math.PI / 180;
+    const speed = 4 + Math.random() * 4;
+    return {
+      x: sx, y: sy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      length: 80 + Math.random() * 80,
+      opacity: 1,
+      life: 1,
+    };
+  }
+
+  let lastTime = 0;
+  function animate(ts) {
+    const dt = Math.min(ts - lastTime, 50);
+    lastTime = ts;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const W = canvas.width, H = canvas.height;
+
+    // Draw static stars
+    const t = ts * 0.001;
+    for (const s of stars) {
+      const op = s.baseOpacity + Math.sin(t * s.speed * 6 + s.phase) * 0.3;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.05, Math.min(1, op));
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Draw shimmer
+    for (let i = 0; i < shimmer.length; i++) {
+      const p = shimmer[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.opacity += p.fadeDir * p.fadeSpeed;
+      if (p.opacity >= p.maxOpacity) { p.opacity = p.maxOpacity; p.fadeDir = -1; }
+      if (p.opacity <= 0 || p.y < -10 || p.x < -10 || p.x > W + 10) {
+        shimmer[i] = createShimmer();
+        shimmer[i].x = Math.random() * W;
+        shimmer[i].y = H + 10;
+        continue;
+      }
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+      g.addColorStop(0, p.color);
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Shooting stars
+    const now = Date.now();
+    if (now > nextShoot && shootingStars.length < 3) {
+      shootingStars.push(createShootingStar());
+      nextShoot = now + 3500 + Math.random() * 6000;
+    }
+    for (let i = shootingStars.length - 1; i >= 0; i--) {
+      const ss = shootingStars[i];
+      ss.x += ss.vx;
+      ss.y += ss.vy;
+      ss.life -= 0.015;
+      if (ss.life <= 0 || ss.x > W + 50 || ss.y > H + 50) {
+        shootingStars.splice(i, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.globalAlpha = ss.life * 0.85;
+      const gss = ctx.createLinearGradient(
+        ss.x - ss.vx * ss.length / ss.vx, ss.y - ss.vy * ss.length / ss.vy,
+        ss.x, ss.y
+      );
+      gss.addColorStop(0, 'transparent');
+      gss.addColorStop(0.7, 'rgba(200,230,255,0.4)');
+      gss.addColorStop(1, 'rgba(255,255,255,0.95)');
+      ctx.strokeStyle = gss;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(ss.x - ss.vx * 20, ss.y - ss.vy * 20);
+      ctx.lineTo(ss.x, ss.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  // ─── SCROLL PARALLAX ───
+  const ringWrap = document.getElementById('cosmic-ring-wrap');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    ringWrap.style.transform = `translateY(${y * 0.28}px)`;
+  }, { passive: true });
+
+  // ─── CONTENT SECTION FADE-IN ON SCROLL ───
+  const sections = document.querySelectorAll('.section');
+  const nameCards = document.querySelectorAll('.name-card');
+  [...sections, ...nameCards].forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'opacity 0.9s ease, transform 0.9s ease';
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  [...sections, ...nameCards].forEach(el => observer.observe(el));
+})();
+</script>
+</body>
+</html>
