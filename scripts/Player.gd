@@ -109,7 +109,7 @@ func _process(delta: float) -> void:
 	else:
 		var nearest := _get_nearest_enemy()
 		if nearest:
-			var target := (nearest.position - position).angle()
+			var target: float = (nearest.position - position).angle()
 			sword_angle = lerp_angle(sword_angle, target, delta * 7.0)
 
 	queue_redraw()
