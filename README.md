@@ -1,38 +1,44 @@
-# Neon Jedi Survivor
+# Jedi Deflector
 
-Roguelike survival в стиле Vampire Survivors с Star Wars сеттингом.
+A browser-based bullet-hell game with a deflection mechanic, set in a dark neon Cyberpunk–Star Wars aesthetic.
 
-## Запуск
+## How to play
 
-1. Скачай **Godot 4** на [godotengine.org](https://godotengine.org) (версия 4.2+)
-2. Клонируй репозиторий: `git clone https://github.com/denrech/denos`
-3. Открой Godot → **Import** → выбери папку `denos` → **Open**
-4. Нажми **F5** (или кнопку Play)
+Open `index.html` in any modern browser. No server, no build step required.
 
-## Управление
+### Controls
 
-| Клавиши | Действие |
-|---------|----------|
-| WASD / Стрелки | Движение |
-| Автоматически | Атака лайтсабером |
+| Key | Action |
+|-----|--------|
+| WASD / Arrow keys | Move |
+| Lightsaber | Auto-tracks nearest incoming bolt |
+| SPACE | Force Push (after upgrade) |
 
-## Геймплей
+### Core mechanic
 
-- Выживай на арене Geonosis против волн дроидов
-- Волны приходят каждые 30 секунд, становятся сильнее
-- Собирай XP-орбы с убитых врагов
-- При каждом уровне выбирай 1 из 3 апгрейдов
-- Цель — продержаться как можно дольше
+Your lightsaber automatically rotates toward the nearest laser bolt. Position yourself so the saber intercepts incoming fire — the bolt deflects back at full speed and kills the enemy that fired it.
 
-## Апгрейды
+### Upgrades
 
-- ❤️ Сила Духа — +25 Max HP
-- ⚡ Шаг Джедая — +15% скорость движения
-- ⚔️ Мощь Клинка — +20% урон
-- 🌀 Быстрый Удар — +10% скорость атаки
-- 🔵 Широкий Замах — +25% радиус атаки
-- ✨ Притяжение — +30% радиус сбора XP
-- 💚 Медитация — +1 HP/сек регенерация
-- ✖️ Двойной Удар — +1 удар за атаку
-- 🛡️ Силовой Щит — блок раз в 10 сек
-- ⭐ Ученик Йоды — +50% XP с врагов
+On level up, choose one of three random upgrades:
+
+- **Longer Blade** — bigger deflection zone
+- **Quick Reflex** — saber tracks threats faster
+- **Force Shield** — absorbs one hit every 8 seconds
+- **Pierce Shot** — deflected bolts punch through multiple enemies
+- **Force Spin** — every deflection triggers a brief 360° saber sweep
+- **Force Healing** — regenerate 1 HP per second
+- **Danger Sense** — saber auto-aims from farther away
+- **Speed Boost** — move faster
+- **Force Push** — [SPACE] launches all nearby bolts outward
+- **Force Mastery** — +50% XP from all kills
+
+### Enemy types
+
+| Type | Notes |
+|------|-------|
+| B1 Droid | Basic, slow single shots |
+| Commando Droid | Fast, rapid fire |
+| Super Battle Droid | Tanky, 3-bolt burst; spawns as boss every 3 waves |
+
+Waves escalate in enemy count and bolt speed. Survive as long as possible.
