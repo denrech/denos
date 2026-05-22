@@ -95,25 +95,26 @@
 <canvas id="c"></canvas>
 <div id="ui-overlay">
   <div id="startscreen-panel">
-    <h1>JEDI DEFLECTOR</h1>
-    <div class="tagline">— CORUSCANT UNDERWORLD —</div>
+    <h1>ДЖЕДАЙ-ОТРАЖАТЕЛЬ</h1>
+    <div class="tagline">— КОРУСКАНТ · НИЖНИЙ ГОРОД —</div>
     <div class="controls">
-      <span>WASD</span> / Arrows — Move<br>
-      <span>Lightsaber</span> — Auto-tracks nearest bolt<br>
-      <span>Deflect</span> — Position saber to intercept<br>
-      <span>SPACE</span> — Force Push (after upgrade)<br>
+      <span>WASD</span> / Стрелки — Движение<br>
+      <span>Меч</span> — сам наводится на ближайший болт<br>
+      <span>Отражение</span> — подставь меч под выстрел<br>
+      <span>Ближний бой</span> — режь дроидов мечом вплотную<br>
+      <span>ПРОБЕЛ</span> — Толчок Силы (после улучшения)<br>
     </div>
-    <button id="start-btn">IGNITE SABER</button>
+    <button id="start-btn">ЗАЖЕЧЬ МЕЧ</button>
   </div>
   <div id="levelup-panel">
-    <h2>LEVEL UP</h2>
-    <div class="subtitle">CHOOSE YOUR PATH</div>
+    <h2>НОВЫЙ УРОВЕНЬ</h2>
+    <div class="subtitle">ВЫБЕРИ СВОЙ ПУТЬ</div>
     <div id="upgrade-choices"></div>
   </div>
   <div id="gameover-panel">
-    <h2>YOU HAVE FALLEN</h2>
+    <h2>ТЫ ПАЛ</h2>
     <div class="go-stats" id="go-stats"></div>
-    <button id="restart-btn">TRY AGAIN</button>
+    <button id="restart-btn">ЕЩЁ РАЗ</button>
   </div>
 </div>
 
@@ -244,6 +245,8 @@ const CFG = {
   bulletDamage: 12,
   deflectedSpeed: 380,
   deflectedDamage: 40,
+  meleeTickDamage: 14,
+  meleeCooldown: 0.25,
   xpOrbPickupR: 48,
   xpOrbSpeed: 180,
   enemyBulletCooldownBase: 2.4,
@@ -346,6 +349,10 @@ const player = {
   saberAngle: 0,
   saberLength: CFG.saberLength,
   saberTrackSpeed: CFG.saberTrackSpeed,
+  bodyAngle: 0,
+  walkPhase: 0,
+  bob: 0,
+  gripDist: 12,
   // upgrades
   shieldCooldown: 0, shieldMax: 8, shieldActive: false,
   hasShield: false,
@@ -359,25 +366,146 @@ const player = {
   dead: false,
 };
 
+// Saber hilt position in world space — saber pivots from the hands, not the body center
+function getSaberHiltPos() {
+  return {
+    x: player.x + Math.cos(player.saberAngle) * player.gripDist,
+    y: player.y + Math.sin(player.saberAngle) * player.gripDist + player.bob,
+  };
+}
+
 function getSaberEndpoints(angle) {
-  const a = player.spinTimer > 0 ? angle : angle;
-  const tx = player.x + Math.cos(a) * player.saberLength;
-  const ty = player.y + Math.sin(a) * player.saberLength;
-  return { bx: player.x, by: player.y, tx, ty };
+  const hilt = getSaberHiltPos();
+  const tx = hilt.x + Math.cos(angle) * player.saberLength;
+  const ty = hilt.y + Math.sin(angle) * player.saberLength;
+  return { bx: hilt.x, by: hilt.y, tx, ty };
 }
 
 function drawPlayer() {
-  const { x, y, saberAngle, saberLength } = player;
-  // body glow
-  glowCircle(x, y, 22, '#001133', 1);
-  glowCircle(x, y, 10, '#0033aa', 0.6);
-  // body silhouette
+  const { x, y, saberAngle, bodyAngle, walkPhase, bob } = player;
+
+  // Soft ground glow under feet — slight cyan tint hints at Jedi presence
+  glowCircle(x, y + 22, 40, '#003355', 0.55);
+
+  // ─── Body in local space (scaled 1.6x for visibility) ────────
   ctx.save();
-  ctx.fillStyle = '#08102a';
-  ctx.beginPath(); ctx.arc(x, y, 13, 0, TAU); ctx.fill();
+  ctx.translate(x, y + bob);
+  ctx.rotate(bodyAngle);
+  ctx.scale(1.6, 1.6);
+
+  // Cloak — broad sweeping shape behind everything
+  ctx.fillStyle = '#0e0e1a';
+  ctx.beginPath();
+  ctx.ellipse(-3, 4, 16, 20, 0, 0, TAU);
+  ctx.fill();
+  // Cloak highlight (subtle blue rim)
+  ctx.fillStyle = '#1a1a2e';
+  ctx.beginPath();
+  ctx.ellipse(-5, 0, 12, 16, 0, 0, TAU);
+  ctx.fill();
+
+  // Legs with walking sway
+  const legSwing = Math.sin(walkPhase) * 3.5;
+  ctx.fillStyle = '#3a2a18';
+  ctx.fillRect(-5 + legSwing, 8, 4, 13);
+  ctx.fillRect( 1 - legSwing, 8, 4, 13);
+  // Boots
+  ctx.fillStyle = '#0d0a06';
+  ctx.fillRect(-5 + legSwing, 19, 5, 3);
+  ctx.fillRect( 1 - legSwing, 19, 5, 3);
+
+  // Torso — robe
+  ctx.fillStyle = '#5a4028';
+  roundRect(-9, -8, 18, 17, 4);
+  ctx.fill();
+  // Robe shading (left side darker)
+  ctx.fillStyle = '#3b2a1c';
+  roundRect(-9, -8, 7, 17, 4);
+  ctx.fill();
+  // Belt
+  ctx.fillStyle = '#1a1208';
+  ctx.fillRect(-9, 4, 18, 2.5);
+  // Belt buckle
+  ctx.fillStyle = '#8a6a30';
+  ctx.fillRect(-1.5, 4, 3, 2.5);
+
+  // Inner robe V-neck
+  ctx.fillStyle = '#2a1810';
+  ctx.beginPath();
+  ctx.moveTo(-3, -6); ctx.lineTo(0, 0); ctx.lineTo(3, -6);
+  ctx.closePath(); ctx.fill();
+
+  // Hood — dark arc behind head
+  ctx.fillStyle = '#0c0c16';
+  ctx.beginPath();
+  ctx.ellipse(0, -11, 10, 10, 0, 0, TAU);
+  ctx.fill();
+
+  // Head — peeking out of hood
+  ctx.fillStyle = '#d4a878';
+  ctx.beginPath();
+  ctx.arc(2, -10, 5.5, 0, TAU);
+  ctx.fill();
+  // Beard/jaw shadow
+  ctx.fillStyle = '#7a5a3a';
+  ctx.beginPath();
+  ctx.arc(2, -7, 3.5, 0, Math.PI, false);
+  ctx.fill();
+  // Hood front shadow
+  ctx.fillStyle = '#050508';
+  ctx.beginPath();
+  ctx.ellipse(0, -14, 9, 5, 0, 0, TAU);
+  ctx.fill();
+  // Eye dots
+  ctx.fillStyle = '#0a0a0a';
+  ctx.beginPath(); ctx.arc(0.5, -10.5, 0.8, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(3.5, -10.5, 0.8, 0, TAU); ctx.fill();
+
+  // ─── Arms reaching toward the saber grip ──────────────────────
+  // Grip target in body-local space (account for the 1.6x scale)
+  const localGripDist = player.gripDist / 1.6;
+  const saberLocal = saberAngle - bodyAngle;
+  const gripX = Math.cos(saberLocal) * localGripDist;
+  const gripY = Math.sin(saberLocal) * localGripDist;
+  ctx.strokeStyle = '#5a4028';
+  ctx.lineWidth = 4.5;
+  ctx.lineCap = 'round';
+  // Right shoulder → forward hand (lead hand)
+  ctx.beginPath(); ctx.moveTo(5, -3); ctx.lineTo(gripX, gripY); ctx.stroke();
+  // Left shoulder → rear hand (slightly behind grip)
+  const backHandX = gripX - Math.cos(saberLocal) * 4;
+  const backHandY = gripY - Math.sin(saberLocal) * 4;
+  ctx.beginPath(); ctx.moveTo(-5, -3); ctx.lineTo(backHandX, backHandY); ctx.stroke();
+  // Arm shading
+  ctx.strokeStyle = '#3b2a1c';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(5, -3); ctx.lineTo(gripX, gripY); ctx.stroke();
+  // Hands
+  ctx.fillStyle = '#d4a878';
+  ctx.beginPath(); ctx.arc(gripX, gripY, 2.5, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(backHandX, backHandY, 2.5, 0, TAU); ctx.fill();
+
+  // Saber hilt — at the grip
+  ctx.save();
+  ctx.translate(gripX, gripY);
+  ctx.rotate(saberLocal);
+  ctx.fillStyle = '#9a9aa2';
+  ctx.fillRect(-5, -2.2, 10, 4.4);
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(-3, -2.2, 1, 4.4);
+  ctx.fillRect( 0, -2.2, 1, 4.4);
+  ctx.fillRect( 3, -2.2, 1, 4.4);
+  // Emitter ring (brighter end)
+  ctx.fillStyle = '#e8e8f0';
+  ctx.fillRect(4.5, -2.4, 2, 4.8);
+  // Pommel
+  ctx.fillStyle = '#5a5a62';
+  ctx.fillRect(-5.5, -2, 0.8, 4);
   ctx.restore();
 
-  // saber
+  ctx.restore();
+
+  // ─── Saber blade in world space ──────────────────────────────
   let drawAngles = [saberAngle];
   if (player.spinTimer > 0) {
     const steps = 8;
@@ -389,18 +517,29 @@ function drawPlayer() {
     glowLine(ep.bx, ep.by, ep.tx, ep.ty, '#00aaff', 2.5, 22, drawAngles.length > 1 ? 0.4 : 1);
   }
 
-  // shield bubble
+  // Shield bubble
   if (player.hasShield && player.shieldActive) {
-    glowCircle(x, y, 28, '#00aaff', 0.25);
+    glowCircle(x, y, 30, '#00aaff', 0.25);
     ctx.save();
     ctx.strokeStyle = '#00ccff';
     ctx.lineWidth = 1.5;
     ctx.globalAlpha = 0.55;
     ctx.globalCompositeOperation = 'lighter';
     ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.arc(x, y, 28, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, 30, 0, TAU); ctx.stroke();
     ctx.restore();
   }
+}
+
+// Small helper for rounded rect path
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
 }
 
 // ─── BULLETS ──────────────────────────────────────────────────────────────────
@@ -487,8 +626,28 @@ function spawnEnemy(type='droid', wave=1) {
     scoreVal: def.scoreVal, xpVal: def.xpVal,
     dead: false,
     flashTimer: 0,
+    meleeCooldown: 0,
+    walkPhase: rnd(0, TAU),
+    muzzleSide: 0,
     angle: 0,
   });
+}
+
+// Local muzzle offset depending on droid type
+const MUZZLE_OFFSETS = {
+  droid:    [{x: 18, y: 4}],
+  commando: [{x: 20, y: 2}],
+  super:    [{x: 16, y: -6}, {x: 16, y: 6}],
+};
+
+function getMuzzlePos(e) {
+  const offs = MUZZLE_OFFSETS[e.type];
+  const off = offs[e.muzzleSide % offs.length];
+  const cs = Math.cos(e.angle), sn = Math.sin(e.angle);
+  return {
+    x: e.x + off.x * cs - off.y * sn,
+    y: e.y + off.x * sn + off.y * cs,
+  };
 }
 
 function updateEnemies(dt, waveNum) {
@@ -496,6 +655,7 @@ function updateEnemies(dt, waveNum) {
     const e = enemies[i];
     if (e.dead) { enemies.splice(i,1); continue; }
     if (e.flashTimer > 0) e.flashTimer -= dt;
+    if (e.meleeCooldown > 0) e.meleeCooldown -= dt;
 
     const dx = player.x - e.x, dy = player.y - e.y;
     const d = Math.sqrt(dx*dx+dy*dy);
@@ -505,6 +665,7 @@ function updateEnemies(dt, waveNum) {
     if (d > CFG.enemyStopRange) {
       e.x += (dx/d) * e.speed * dt;
       e.y += (dy/d) * e.speed * dt;
+      e.walkPhase += e.speed * dt * 0.06;
     }
 
     // shoot
@@ -529,33 +690,234 @@ function updateEnemies(dt, waveNum) {
 function fireEnemyBullet(e) {
   const spread = (Math.random()-0.5)*0.12;
   const ang = e.angle + spread;
-  spawnBullet(e.x, e.y, Math.cos(ang)*e.bulletSpeed, Math.sin(ang)*e.bulletSpeed, false, e.id);
+  const m = getMuzzlePos(e);
+  spawnBullet(m.x, m.y, Math.cos(ang)*e.bulletSpeed, Math.sin(ang)*e.bulletSpeed, false, e.id);
+  // Muzzle flash spark
+  spawnSparks(m.x, m.y, 3, '#ffaa44', 0.6);
+  // Alternate sides for super droid
+  e.muzzleSide ^= 1;
 }
 
 function drawEnemies() {
   for (const e of enemies) {
-    // glow
-    glowCircle(e.x, e.y, e.radius*2.5, e.glowColor, 0.18);
-    // body
+    // soft ground glow
+    glowCircle(e.x, e.y + e.radius*0.6, e.radius*1.8, e.glowColor, 0.18);
+
     ctx.save();
-    ctx.fillStyle = e.flashTimer > 0 ? '#ffffff' : e.color;
-    ctx.globalAlpha = 0.85;
-    ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, TAU); ctx.fill();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(e.angle);
+
+    if (e.type === 'droid') drawB1Body(e);
+    else if (e.type === 'commando') drawCommandoBody(e);
+    else if (e.type === 'super') drawSuperBody(e);
+
+    // Hit flash overlay
+    if (e.flashTimer > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = Math.min(1, e.flashTimer / 0.1) * 0.7;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(0, 0, e.radius+2, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+
     ctx.restore();
-    // eye
-    const ex2 = e.x + Math.cos(e.angle)*e.radius*0.55;
-    const ey2 = e.y + Math.sin(e.angle)*e.radius*0.55;
-    glowCircle(ex2, ey2, 4, '#ffaa00', 0.9);
-    // HP bar
+
+    // HP bar (world space)
     if (e.hp < e.maxHp) {
       const bw = e.radius*2, bh=3;
-      const bx = e.x - bw/2, by = e.y - e.radius - 8;
+      const bx = e.x - bw/2, by = e.y - e.radius - 10;
       ctx.save();
-      ctx.fillStyle = '#330000'; ctx.fillRect(bx, by, bw, bh);
-      ctx.fillStyle = '#ff2200'; ctx.fillRect(bx, by, bw*(e.hp/e.maxHp), bh);
+      ctx.fillStyle = '#220000'; ctx.fillRect(bx, by, bw, bh);
+      ctx.fillStyle = '#ff3322'; ctx.fillRect(bx, by, bw*(e.hp/e.maxHp), bh);
       ctx.restore();
     }
   }
+}
+
+// ─── B1 Battle Droid ─────────────────────────────────────────
+function drawB1Body(e) {
+  const sway = Math.sin(e.walkPhase) * 2;
+  // Legs
+  ctx.fillStyle = '#7a5a30';
+  ctx.fillRect(-2 + sway, 6, 2, 10);
+  ctx.fillRect( 0 - sway, 6, 2, 10);
+  // Feet
+  ctx.fillStyle = '#3a2810';
+  ctx.fillRect(-2 + sway, 15, 4, 2);
+  ctx.fillRect( 0 - sway, 15, 4, 2);
+  // Skinny torso
+  ctx.fillStyle = '#c9a96e';
+  ctx.fillRect(-3, -4, 6, 10);
+  // Chest detail
+  ctx.fillStyle = '#7a5a30';
+  ctx.fillRect(-2, -2, 4, 1);
+  // Shoulders (small)
+  ctx.fillStyle = '#a08754';
+  ctx.beginPath(); ctx.arc(-3, -4, 2, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc( 3, -4, 2, 0, TAU); ctx.fill();
+  // Left arm — back, dangling
+  ctx.strokeStyle = '#c9a96e';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-3, -4); ctx.lineTo(-5, 4); ctx.stroke();
+  // Right arm — extended, holding blaster
+  ctx.beginPath(); ctx.moveTo(3, -4); ctx.lineTo(14, 2); ctx.stroke();
+  // Blaster rifle
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(11, 0, 10, 3);  // barrel
+  ctx.fillRect(13, 3, 3, 4);    // grip
+  ctx.fillStyle = '#3a3a3a';
+  ctx.fillRect(20, 0, 2, 3);    // muzzle tip
+  // Head — long oval
+  ctx.fillStyle = '#c9a96e';
+  ctx.beginPath();
+  ctx.ellipse(0, -10, 3, 6, 0, 0, TAU);
+  ctx.fill();
+  // Eyes — small dark dots
+  ctx.fillStyle = '#1a0a00';
+  ctx.beginPath(); ctx.arc(1, -12, 0.8, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(1, -9,  0.8, 0, TAU); ctx.fill();
+  // Antenna
+  ctx.strokeStyle = '#7a5a30';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(-1, -17); ctx.stroke();
+}
+
+// ─── Commando Droid ──────────────────────────────────────────
+function drawCommandoBody(e) {
+  const sway = Math.sin(e.walkPhase) * 1.5;
+  // Legs — armored
+  ctx.fillStyle = '#2a2a30';
+  ctx.fillRect(-3 + sway, 4, 3, 9);
+  ctx.fillRect( 0 - sway, 4, 3, 9);
+  ctx.fillStyle = '#1a1a1e';
+  ctx.fillRect(-3 + sway, 12, 4, 2);
+  ctx.fillRect( 0 - sway, 12, 4, 2);
+  // Torso — bulky chest plate
+  ctx.fillStyle = '#3a3a42';
+  roundRect(-5, -5, 10, 10, 2);
+  ctx.fill();
+  // Chest cross plate
+  ctx.fillStyle = '#1a1a1e';
+  ctx.fillRect(-4, -3, 8, 1.5);
+  ctx.fillRect(-1, -5, 2, 8);
+  // Shoulders
+  ctx.fillStyle = '#2a2a30';
+  ctx.beginPath(); ctx.arc(-5, -4, 2.5, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc( 5, -4, 2.5, 0, TAU); ctx.fill();
+  // Arms — both forward on rifle (two-handed grip), slight lean
+  ctx.strokeStyle = '#3a3a42';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-4, -3); ctx.lineTo(10, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 4, -3); ctx.lineTo(17, 2); ctx.stroke();
+  // Long rifle
+  ctx.fillStyle = '#1a1a1e';
+  ctx.fillRect(8, 0, 16, 3.5);
+  ctx.fillStyle = '#080808';
+  ctx.fillRect(22, 0.5, 3, 2.5);   // muzzle
+  ctx.fillStyle = '#5a3a1a';
+  ctx.fillRect(7, 2, 2, 4);        // stock
+  // Head — angular
+  ctx.fillStyle = '#3a3a42';
+  roundRect(-4, -12, 8, 8, 2);
+  ctx.fill();
+  // Red visor slit
+  ctx.fillStyle = '#ff2200';
+  ctx.fillRect(-3, -10, 6, 1.5);
+  // Visor glow
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = '#ff4400';
+  ctx.globalAlpha = 0.6;
+  ctx.fillRect(-4, -10.5, 8, 2.5);
+  ctx.restore();
+  // Chin vent
+  ctx.fillStyle = '#1a1a1e';
+  ctx.fillRect(-2, -6, 4, 1);
+}
+
+// ─── Super Battle Droid ──────────────────────────────────────
+function drawSuperBody(e) {
+  const sway = Math.sin(e.walkPhase) * 1.8;
+  // Heavy legs
+  ctx.fillStyle = '#3a4858';
+  ctx.fillRect(-6 + sway, 8, 5, 14);
+  ctx.fillRect( 1 - sway, 8, 5, 14);
+  ctx.fillStyle = '#1a2028';
+  ctx.fillRect(-7 + sway, 20, 6, 3);
+  ctx.fillRect( 1 - sway, 20, 6, 3);
+  // Thigh armor plates
+  ctx.fillStyle = '#5a6878';
+  ctx.fillRect(-7 + sway, 7, 6, 4);
+  ctx.fillRect( 1 - sway, 7, 6, 4);
+  // Big chest plate (trapezoid via path)
+  ctx.fillStyle = '#5a6878';
+  ctx.beginPath();
+  ctx.moveTo(-13, -8);
+  ctx.lineTo(13, -8);
+  ctx.lineTo(11, 9);
+  ctx.lineTo(-11, 9);
+  ctx.closePath();
+  ctx.fill();
+  // Chest highlight
+  ctx.fillStyle = '#7a8898';
+  ctx.beginPath();
+  ctx.moveTo(-13, -8);
+  ctx.lineTo(13, -8);
+  ctx.lineTo(10, -5);
+  ctx.lineTo(-10, -5);
+  ctx.closePath();
+  ctx.fill();
+  // Center reactor
+  ctx.fillStyle = '#1a2028';
+  ctx.beginPath(); ctx.arc(0, 0, 3, 0, TAU); ctx.fill();
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = '#ff2200';
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath(); ctx.arc(0, 0, 2, 0, TAU); ctx.fill();
+  ctx.restore();
+  // Vent slits
+  ctx.fillStyle = '#1a2028';
+  ctx.fillRect(-9, 5, 18, 1);
+  ctx.fillRect(-9, 7, 18, 1);
+  // Shoulders — big rounded blocks
+  ctx.fillStyle = '#4a5868';
+  ctx.beginPath(); ctx.arc(-12, -5, 5, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc( 12, -5, 5, 0, TAU); ctx.fill();
+  // Arms — segmented forearms with wrist blasters
+  ctx.fillStyle = '#3a4858';
+  // Left arm
+  ctx.fillRect(-15, -2, 4, 7);
+  ctx.fillRect(-16, 4, 5, 4);
+  // Right arm
+  ctx.fillRect( 11, -2, 4, 7);
+  ctx.fillRect( 11, 4, 5, 4);
+  // Wrist blasters — barrels
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(-18, -7, 6, 3);
+  ctx.fillRect( 12, -7, 6, 3);
+  // Muzzle tips
+  ctx.fillStyle = '#2a2f36';
+  ctx.fillRect(-19, -6.5, 1.5, 2);
+  ctx.fillRect( 17.5, -6.5, 1.5, 2);
+  // Small head
+  ctx.fillStyle = '#3a4858';
+  roundRect(-4, -16, 8, 9, 2);
+  ctx.fill();
+  // Eyes — twin red dots
+  ctx.fillStyle = '#ff2200';
+  ctx.beginPath(); ctx.arc(-1.5, -12, 1.2, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc( 1.5, -12, 1.2, 0, TAU); ctx.fill();
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = '#ff4400';
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath(); ctx.arc(-1.5, -12, 2, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc( 1.5, -12, 2, 0, TAU); ctx.fill();
+  ctx.restore();
 }
 
 // ─── XP ORBS ─────────────────────────────────────────────────────────────────
@@ -633,16 +995,16 @@ const upgradeState = {
 };
 
 const UPGRADES = [
-  { id:'longerSaber',    name:'⚔  Longer Blade',      desc:'Saber length +25%. Larger deflect zone.',   maxStack:3 },
-  { id:'quickReflex',   name:'⚡ Quick Reflex',        desc:'Saber tracks threats 2× faster.',           maxStack:2 },
-  { id:'shield',        name:'🔵 Force Shield',        desc:'Absorb 1 bolt every 8 sec.',                maxStack:1 },
-  { id:'piercingDeflect', name:'💫 Pierce Shot',       desc:'Deflected bolts pierce all enemies.',       maxStack:1 },
-  { id:'forceSpinDeflect', name:'🌀 Force Spin',       desc:'Deflecting triggers a brief 360° sweep.',   maxStack:1 },
-  { id:'forceRegen',    name:'❤  Force Healing',       desc:'+1 HP per second (max HP capped).',         maxStack:1 },
-  { id:'dangerSense',   name:'👁  Danger Sense',       desc:'Saber auto-aim range +50%.',                maxStack:2 },
-  { id:'speed',         name:'💨 Speed Boost',          desc:'Movement speed +20%.',                      maxStack:3 },
-  { id:'forcePush',     name:'💥 Force Push',           desc:'[SPACE] launches all nearby bolts outward.',maxStack:1 },
-  { id:'forceMastery',  name:'⭐ Force Mastery',        desc:'+50% XP from all kills.',                   maxStack:1 },
+  { id:'longerSaber',    name:'⚔  Длинный клинок',      desc:'Длина меча +25%. Больше зона отражения.',          maxStack:3 },
+  { id:'quickReflex',   name:'⚡ Быстрый рефлекс',       desc:'Меч наводится в 2 раза быстрее.',                  maxStack:2 },
+  { id:'shield',        name:'🔵 Щит Силы',              desc:'Поглощает 1 болт каждые 8 сек.',                   maxStack:1 },
+  { id:'piercingDeflect', name:'💫 Пробивающий выстрел', desc:'Отражённые болты пробивают всех врагов.',          maxStack:1 },
+  { id:'forceSpinDeflect', name:'🌀 Вихрь Силы',         desc:'После отражения — короткий вихрь меча 360°.',      maxStack:1 },
+  { id:'forceRegen',    name:'❤  Исцеление Силой',       desc:'+1 ЗД в секунду (до максимума).',                  maxStack:1 },
+  { id:'dangerSense',   name:'👁  Чувство опасности',    desc:'Радиус автоприцела +50%.',                         maxStack:2 },
+  { id:'speed',         name:'💨 Ускорение',              desc:'Скорость движения +20%.',                          maxStack:3 },
+  { id:'forcePush',     name:'💥 Толчок Силы',            desc:'[ПРОБЕЛ] раскидывает все ближайшие болты.',        maxStack:1 },
+  { id:'forceMastery',  name:'⭐ Мастерство Силы',        desc:'+50% опыта со всех убийств.',                      maxStack:1 },
 ];
 
 function getAvailableUpgrades() {
@@ -764,6 +1126,28 @@ function killEnemy(e) {
   spawnSparks(e.x, e.y, 18, e.glowColor, 1.1);
   spawnRing(e.x, e.y, e.glowColor, e.radius);
   game.screenShake = CFG.screenShakeDuration * 0.6;
+}
+
+function checkSaberMeleeHits() {
+  const { bx, by, tx, ty } = getSaberEndpoints(player.saberAngle);
+  const sabDx = tx - bx, sabDy = ty - by;
+  const sabLen2 = sabDx*sabDx + sabDy*sabDy;
+  for (const e of enemies) {
+    if (e.dead || e.meleeCooldown > 0) continue;
+    // Closest point on segment to enemy center
+    const dx = e.x - bx, dy = e.y - by;
+    let t = (dx*sabDx + dy*sabDy) / sabLen2;
+    t = clamp(t, 0, 1);
+    const cx = bx + t*sabDx, cy = by + t*sabDy;
+    const d = dist(cx, cy, e.x, e.y);
+    if (d < e.radius + 4) {
+      e.hp -= CFG.meleeTickDamage;
+      e.meleeCooldown = CFG.meleeCooldown;
+      e.flashTimer = 0.1;
+      spawnSparks(cx, cy, 6, '#00ffcc', 0.9);
+      if (e.hp <= 0) killEnemy(e);
+    }
+  }
 }
 
 function checkBulletPlayerHits() {
@@ -890,7 +1274,7 @@ function drawHUD() {
   ctx.fillStyle = hpColor; ctx.fillRect(hbx, hby, hbw*hpFrac, hbh);
   ctx.strokeStyle = '#003322'; ctx.lineWidth=1; ctx.strokeRect(hbx, hby, hbw, hbh);
   ctx.restore();
-  glowText(`HP  ${player.hp}`, hbx+hbw/2, hby+hbh-1, hpColor, 11);
+  glowText(`ЗД  ${Math.round(player.hp)}`, hbx+hbw/2, hby+hbh-1, hpColor, 11);
 
   // XP bar
   const xbx=24, xby=46, xbw=220, xbh=8;
@@ -899,11 +1283,11 @@ function drawHUD() {
   ctx.fillStyle = '#00e5ff'; ctx.fillRect(xbx, xby, xbw*(game.xp/game.xpToNext), xbh);
   ctx.strokeStyle = '#003344'; ctx.lineWidth=1; ctx.strokeRect(xbx, xby, xbw, xbh);
   ctx.restore();
-  glowText(`LVL ${game.level}`, hbx+hbw/2, xby+xbh+12, '#00e5ff', 11);
+  glowText(`УР ${game.level}`, hbx+hbw/2, xby+xbh+12, '#00e5ff', 11);
 
   // Wave
-  glowText(`WAVE  ${game.wave}`, W-80, 36, '#00e5ff', 14);
-  glowText(`SCORE  ${game.score}`, W-80, 56, '#aaddff', 11);
+  glowText(`ВОЛНА  ${game.wave}`, W-90, 36, '#00e5ff', 14);
+  glowText(`СЧЁТ  ${game.score}`, W-90, 56, '#aaddff', 11);
 
   // Deflections
   glowText(`✦ ${game.deflections}`, W/2, 24, '#00ffcc', 13);
@@ -912,14 +1296,13 @@ function drawHUD() {
   if (player.hasForcePush) {
     const cd = game.forcePushCooldown;
     const ready = cd <= 0;
-    const label = ready ? '[SPACE] FORCE PUSH' : `FORCE PUSH  ${cd.toFixed(1)}s`;
+    const label = ready ? '[ПРОБЕЛ] ТОЛЧОК СИЛЫ' : `ТОЛЧОК СИЛЫ  ${cd.toFixed(1)}с`;
     glowText(label, W/2, H-24, ready?'#00e5ff':'#334455', 12, ready?1:0.6);
   }
 
-  // Shield cooldown pips
+  // Shield cooldown
   if (player.hasShield && !player.shieldActive) {
-    const pct = 1 - player.shieldCooldown/player.shieldMax;
-    glowText(`SHIELD  ${(player.shieldCooldown).toFixed(1)}s`, 134, 68, '#0088bb', 10);
+    glowText(`ЩИТ  ${(player.shieldCooldown).toFixed(1)}с`, 134, 68, '#0088bb', 10);
   }
 }
 
@@ -954,7 +1337,7 @@ function triggerGameOver() {
   game.state = 'gameover';
   player.dead = true;
   document.getElementById('go-stats').innerHTML =
-    `WAVE  ${game.wave}<br>SCORE  ${game.score}<br>KILLS  ${game.kills}<br>DEFLECTIONS  ${game.deflections}<br>TIME  ${game.time.toFixed(0)}s`;
+    `ВОЛНА  ${game.wave}<br>СЧЁТ  ${game.score}<br>УБИТО  ${game.kills}<br>ОТРАЖЕНО  ${game.deflections}<br>ВРЕМЯ  ${game.time.toFixed(0)}с`;
   document.getElementById('gameover-panel').style.display = 'block';
 }
 
@@ -967,6 +1350,7 @@ function resetGame() {
     hp:CFG.playerHP, maxHp:CFG.playerHP,
     saberAngle:0, saberLength:CFG.saberLength,
     saberTrackSpeed:CFG.saberTrackSpeed,
+    bodyAngle:0, walkPhase:0, bob:0, gripDist:12,
     shieldCooldown:0, shieldActive:false,
     hasShield:false, hasForcePush:false, hasForceRegen:false,
     piercingDeflect:false, spinOnDeflect:false, spinTimer:0,
@@ -1027,10 +1411,22 @@ function update(dt) {
 
   // movement
   const inp = getInput();
+  const mvLen = Math.sqrt(inp.mx*inp.mx + inp.my*inp.my);
   player.x += inp.mx * player.speed * dt;
   player.y += inp.my * player.speed * dt;
   player.x = clamp(player.x, CFG.playerRadius, W-CFG.playerRadius);
   player.y = clamp(player.y, CFG.playerRadius, H-CFG.playerRadius);
+
+  // Animation: walk phase + body bob + body rotation easing
+  if (mvLen > 0.1) {
+    player.walkPhase += dt * 9;
+    player.bob = Math.sin(player.walkPhase) * 1.2;
+  } else {
+    player.bob = lerp(player.bob, 0, 8*dt);
+  }
+  // Body eases toward 35% of saber angle so it faces the action subtly
+  const targetBody = player.saberAngle * 0.35;
+  player.bodyAngle += angDiff(player.bodyAngle, targetBody) * Math.min(1, 6 * dt);
 
   updateSaberAim(dt);
   updateBullets(dt);
@@ -1039,6 +1435,7 @@ function update(dt) {
   updateParticles(dt);
 
   checkDeflections();
+  checkSaberMeleeHits();
   checkBulletEnemyHits();
   checkBulletPlayerHits();
 
@@ -1105,7 +1502,7 @@ function render(dt) {
   // wave announcement
   if (game.waveTimer < 2.5 && game.state === 'playing') {
     const a = Math.min(1, game.waveTimer < 0.3 ? game.waveTimer/0.3 : Math.max(0,(2.5-game.waveTimer)/0.8));
-    glowText(`WAVE  ${game.wave}`, W/2, H/2, '#00e5ff', 36, a);
+    glowText(`ВОЛНА  ${game.wave}`, W/2, H/2, '#00e5ff', 36, a);
   }
 
   ctx.restore();
