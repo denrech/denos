@@ -47,10 +47,10 @@ func _draw() -> void:
 	draw_rect(Rect2(2, 32, 16, 14), Color(0.18, 0.20, 0.28))
 
 	# Lightsaber — pointing at sword_angle
-	var sw = Vector2.from_angle(sword_angle)
-	var hilt_start := sw * 14
-	var hilt_end   := sw * 22
-	var blade_end  := sw * 64
+	var sw: Vector2 = Vector2.from_angle(sword_angle)
+	var hilt_start: Vector2 = sw * 14.0
+	var hilt_end: Vector2   = sw * 22.0
+	var blade_end: Vector2  = sw * 64.0
 
 	# Handle
 	draw_line(hilt_start, hilt_end, Color(0.55, 0.55, 0.60), 6)
