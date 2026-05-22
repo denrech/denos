@@ -370,6 +370,76 @@ function sndWaveClear() {
   });
 }
 
+function sndPerfectDeflect() {
+  if (!audioCtx || musicMuted) return;
+  const t0=audioCtx.currentTime;
+  [523,659,784].forEach((f,i) => {
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    const t=t0+i*0.03;
+    o.type='square'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.22,t); g.gain.linearRampToValueAtTime(0,t+0.18);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+0.2);
+  });
+  const ting=audioCtx.createOscillator(), tg=audioCtx.createGain();
+  ting.type='sine'; ting.frequency.setValueAtTime(2400,t0);
+  ting.frequency.exponentialRampToValueAtTime(1800,t0+0.18);
+  tg.gain.setValueAtTime(0.18,t0); tg.gain.linearRampToValueAtTime(0,t0+0.22);
+  ting.connect(tg); tg.connect(audioCtx.destination); ting.start(t0); ting.stop(t0+0.22);
+}
+
+function sndProbeShoot() {
+  if (!audioCtx || musicMuted) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type='square';
+  o.frequency.setValueAtTime(2200, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(1400, audioCtx.currentTime+0.06);
+  g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.07);
+  o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.08);
+}
+
+function sndMagnaZap() {
+  if (!audioCtx || musicMuted) return;
+  const len=Math.floor(audioCtx.sampleRate*0.10);
+  const buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  const src=audioCtx.createBufferSource(), g=audioCtx.createGain();
+  const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1500; f.Q.value=4;
+  g.gain.setValueAtTime(0.30, audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.1);
+  src.buffer=buf; src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start();
+}
+
+let saberHumOsc1=null, saberHumOsc2=null, saberHumGain=null;
+function startSaberHum() {
+  if (!audioCtx || saberHumOsc1) return;
+  saberHumOsc1=audioCtx.createOscillator();
+  saberHumOsc2=audioCtx.createOscillator();
+  saberHumGain=audioCtx.createGain();
+  saberHumOsc1.type='square'; saberHumOsc1.frequency.value=110;
+  saberHumOsc2.type='square'; saberHumOsc2.frequency.value=113;
+  saberHumGain.gain.value=0;
+  saberHumOsc1.connect(saberHumGain);
+  saberHumOsc2.connect(saberHumGain);
+  saberHumGain.connect(audioCtx.destination);
+  saberHumOsc1.start(); saberHumOsc2.start();
+}
+function stopSaberHum() {
+  if (!saberHumOsc1) return;
+  try { saberHumOsc1.stop(); saberHumOsc2.stop(); } catch(e){}
+  saberHumOsc1=null; saberHumOsc2=null; saberHumGain=null;
+}
+function updateSaberHum() {
+  if (!saberHumGain || musicMuted) {
+    if (saberHumGain) saberHumGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+    return;
+  }
+  const spd=Math.abs(player.saberAngleDelta||0);
+  const target=0.035 + Math.min(spd*0.04, 0.05);
+  saberHumGain.gain.setTargetAtTime(target, audioCtx.currentTime, 0.04);
+}
+
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const CFG = {
   playerSpeed: 220,
@@ -395,6 +465,10 @@ const CFG = {
   dashDuration: 0.22,
   dashCooldownTime: 2.8,
   lootPickupR: 44,
+  perfectWindow: 0.18,
+  slowMoFactor: 0.30,
+  slowMoDuration: 0.20,
+  hitStopDuration: 0.06,
 };
 
 // ─── STARS ────────────────────────────────────────────────────────────────────
@@ -653,14 +727,15 @@ function drawPlayer() {
     drawAngles = [];
     for (let i=0; i<8; i++) drawAngles.push(saberAngle + i*TAU/8);
   }
+  const pulse = game.screenFlash > 0 ? (1 + (game.screenFlash/CFG.flashDuration)*0.55) : 1;
   for (const ang of drawAngles) {
     const ep = getSaberEndpoints(ang);
-    glowLine(ep.bx,ep.by,ep.tx,ep.ty, saberColor, 2.5, 22, drawAngles.length>1?0.4:1);
+    glowLine(ep.bx,ep.by,ep.tx,ep.ty, saberColor, 2.5*pulse, 22*pulse, drawAngles.length>1?0.4:1);
   }
   if (player.dualSabers && player.spinTimer<=0) {
     const ep2 = getSecondSaberEndpoints();
     const c2 = saberColor === '#ff2200' ? '#cc0066' : '#aa44ff';
-    glowLine(ep2.bx,ep2.by,ep2.tx,ep2.ty, c2, 2, 18, 0.85);
+    glowLine(ep2.bx,ep2.by,ep2.tx,ep2.ty, c2, 2*pulse, 18*pulse, 0.85);
   }
 
   // Shield
@@ -685,6 +760,12 @@ function updateBullets(dt) {
   for (let i=bullets.length-1; i>=0; i--) {
     const b=bullets[i];
     if (b.dead) { bullets.splice(i,1); continue; }
+    if (!b.deflected) {
+      const dxp=b.x-player.x, dyp=b.y-player.y;
+      const bSpd2=b.vx*b.vx+b.vy*b.vy;
+      const tClose=bSpd2>0 ? -(b.vx*dxp+b.vy*dyp)/bSpd2 : Infinity;
+      b.timeToImpact = tClose >= 0 ? tClose : Infinity;
+    }
     b.trail.push({x:b.x, y:b.y});
     if (b.trail.length > b.trailMax) b.trail.shift();
     b.x += b.vx*dt; b.y += b.vy*dt;
@@ -694,16 +775,19 @@ function updateBullets(dt) {
 
 function drawBullets() {
   for (const b of bullets) {
-    const color = b.deflected ? '#00ffcc' : '#ff4400';
+    const color = b.perfectDeflect ? '#ffee44' : (b.deflected ? '#00ffcc' : '#ff4400');
+    const lw = b.perfectDeflect ? 1.3 : 1;
+    const lwHead = b.perfectDeflect ? 2.4 : 1.8;
+    const headGlow = b.perfectDeflect ? 16 : 12;
     for (let t=0; t<b.trail.length-1; t++) {
       const p0=b.trail[t], p1=b.trail[t+1];
-      glowLine(p0.x,p0.y,p1.x,p1.y,color,1,8,(t/b.trail.length)*0.35);
+      glowLine(p0.x,p0.y,p1.x,p1.y,color,lw,8,(t/b.trail.length)*0.35);
     }
     if (b.trail.length>0) {
       const last=b.trail[b.trail.length-1];
-      glowLine(last.x,last.y,b.x,b.y,color,1.8,12);
+      glowLine(last.x,last.y,b.x,b.y,color,lwHead,headGlow);
     }
-    glowCircle(b.x,b.y,6,color,0.6);
+    glowCircle(b.x,b.y, b.perfectDeflect?8:6, color, b.perfectDeflect?0.8:0.6);
   }
 }
 
@@ -936,6 +1020,7 @@ function fireEnemyBullet(e) {
   spawnBullet(m.x, m.y, Math.cos(ang)*e.bulletSpeed, Math.sin(ang)*e.bulletSpeed, false, e.id);
   spawnSparks(m.x, m.y, 3, '#ffaa44', 0.6);
   e.muzzleSide ^= 1;
+  if (e.type==='probe') sndProbeShoot();
 }
 
 function drawEnemies() {
@@ -1118,6 +1203,19 @@ function drawMagnaBody(e) {
   ctx.globalAlpha=0.5;
   ctx.beginPath(); ctx.arc(0,-16,9,0,TAU); ctx.fill();
   ctx.beginPath(); ctx.arc(0, 18,9,0,TAU); ctx.fill();
+  // Lightning arc between tips (random zigzag)
+  if (Math.random() < 0.28) {
+    ctx.globalAlpha=0.85; ctx.strokeStyle='#cc88ff'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(0,-16);
+    const steps=6;
+    for (let s=1; s<steps; s++) {
+      const t=s/steps, y=-16+34*t, x=(Math.random()-0.5)*8;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(0,18); ctx.stroke();
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=0.6; ctx.globalAlpha=0.7;
+    ctx.stroke();
+  }
   ctx.restore();
   // Head
   ctx.fillStyle='#3a0055'; roundRect(-5,-16,10,9,3); ctx.fill();
@@ -1170,12 +1268,13 @@ const game = {
   state:'start',
   xp:0, xpToNext:40, level:1,
   score:0, wave:1, waveTimer:0, waveDuration:22,
-  deflections:0, kills:0,
+  deflections:0, perfectDeflects:0, kills:0,
   screenFlash:0, screenShake:0, shakeX:0, shakeY:0,
   forcePushCooldown:0, forcePushMax:12,
   time:0,
   combo:0, comboTimer:0,
   waveClearBanner:0, waveClearText:'',
+  slowMoTimer:0, hitStop:0,
 };
 
 function addXP(val) {
@@ -1281,14 +1380,29 @@ function checkDeflections() {
         const ref=reflect(b.vx,b.vy,nx,ny);
         const spd=CFG.deflectedSpeed, len=Math.sqrt(ref.x*ref.x+ref.y*ref.y);
         b.vx=(ref.x/len)*spd; b.vy=(ref.y/len)*spd;
-        b.deflected=true; b.pierceCount=0; b.trailMax=10;
-        spawnSparks(b.x,b.y,14,'#00ffcc',1.2);
-        spawnRing(b.x,b.y,'#00ffcc',12);
-        game.screenFlash=CFG.flashDuration;
-        game.screenShake=CFG.screenShakeDuration;
+        const perfect = b.timeToImpact !== undefined && b.timeToImpact < CFG.perfectWindow;
+        b.deflected=true; b.perfectDeflect=perfect; b.pierceCount=0; b.trailMax=10;
+        if (perfect) {
+          spawnSparks(b.x,b.y,28,'#ffee44',1.8);
+          spawnRing(b.x,b.y,'#ffee44',26);
+          spawnRing(b.x,b.y,'#ffffff',14);
+          game.screenFlash=CFG.flashDuration*2;
+          game.screenShake=CFG.screenShakeDuration*1.5;
+          game.slowMoTimer=CFG.slowMoDuration;
+          game.hitStop=CFG.hitStopDuration;
+          game.perfectDeflects++;
+          game.combo++; // дополнительный +1 поверх обычного
+          showFloatingText(player.x, player.y-38, 'ИДЕАЛЬНО ×2', '#ffee44');
+          sndPerfectDeflect();
+        } else {
+          spawnSparks(b.x,b.y,14,'#00ffcc',1.2);
+          spawnRing(b.x,b.y,'#00ffcc',12);
+          game.screenFlash=CFG.flashDuration;
+          game.screenShake=CFG.screenShakeDuration;
+          sndDeflect();
+        }
         game.deflections++;
         game.combo++; game.comboTimer=3;
-        sndDeflect();
         if (player.spinOnDeflect) player.spinTimer=0.45;
         checkComboMilestone();
       }
@@ -1305,10 +1419,11 @@ function checkBulletEnemyHits() {
       if (e.dead||e.dying) continue;
       const d=dist(b.x,b.y,e.x,e.y);
       if (d < e.radius+6) {
-        e.hp -= CFG.deflectedDamage;
+        const dmg = CFG.deflectedDamage * (b.perfectDeflect ? 2 : 1);
+        e.hp -= dmg;
         e.flashTimer=0.1;
-        spawnSparks(b.x,b.y,6,'#ff6600',0.7);
-        if (e.hp<=0) killEnemy(e);
+        spawnSparks(b.x,b.y,b.perfectDeflect?12:6, b.perfectDeflect?'#ffee44':'#ff6600', b.perfectDeflect?1.2:0.7);
+        if (e.hp<=0) { e.perfectKill = !!b.perfectDeflect; killEnemy(e); }
         if (!player.piercingDeflect) { b.dead=true; break; }
         else { b.pierceCount++; if (b.pierceCount>4) { b.dead=true; break; } }
       }
@@ -1323,9 +1438,17 @@ function killEnemy(e) {
   game.kills++;
   game.combo++; game.comboTimer=3;
   checkComboMilestone();
-  spawnXPOrb(e.x, e.y, e.xpVal);
-  spawnSparks(e.x, e.y, 18, e.glowColor, 1.1);
-  spawnRing(e.x, e.y, e.glowColor, e.radius);
+  const xpAmount = e.perfectKill ? e.xpVal*2 : e.xpVal;
+  spawnXPOrb(e.x, e.y, xpAmount);
+  if (e.perfectKill) {
+    spawnSparks(e.x, e.y, 28, '#ffee44', 1.5);
+    spawnRing(e.x, e.y, '#ffee44', e.radius*1.6);
+    spawnRing(e.x, e.y, '#ffffff', e.radius*0.9);
+    showFloatingText(e.x, e.y-12, '+'+Math.round(xpAmount)+' XP ×2', '#ffee44');
+  } else {
+    spawnSparks(e.x, e.y, 18, e.glowColor, 1.1);
+    spawnRing(e.x, e.y, e.glowColor, e.radius);
+  }
   spawnDebris(e.x, e.y, e.color, 5);
   spawnOilSplat(e.x, e.y, e.radius*1.8);
   game.screenShake=CFG.screenShakeDuration*0.6;
@@ -1365,8 +1488,10 @@ function checkMagnaContactDamage() {
       player.hp -= 8;
       e.magnaContactCooldown=0.5;
       player.iFrames=0.2;
-      spawnSparks(player.x,player.y,6,'#9922ff',0.7);
+      spawnSparks(player.x,player.y,8,'#aa44ff',0.9);
+      spawnRing(player.x,player.y,'#9922ff',16);
       game.screenShake=CFG.screenShakeDuration;
+      sndMagnaZap();
       sndPlayerHit();
       if (player.hp<=0) { player.hp=0; triggerGameOver(); }
     }
@@ -1408,9 +1533,11 @@ function checkComboMilestone() {
 
 // ─── SABER AUTO-AIM ───────────────────────────────────────────────────────────
 function updateSaberAim(dt) {
+  const prevAngle=player.saberAngle;
   if (player.spinTimer>0) {
     player.spinTimer -= dt;
     player.saberAngle += TAU*3.5*dt;
+    player.saberAngleDelta = (player.saberAngle-prevAngle)/(dt||0.016);
     return;
   }
   let targetAngle=null, minScore=Infinity;
@@ -1438,6 +1565,7 @@ function updateSaberAim(dt) {
     const maxTurn=player.saberTrackSpeed*dt;
     player.saberAngle += clamp(diff,-maxTurn,maxTurn);
   }
+  player.saberAngleDelta = angDiff(prevAngle,player.saberAngle)/(dt||0.016);
 }
 
 // ─── INPUT ────────────────────────────────────────────────────────────────────
@@ -1625,8 +1753,9 @@ function triggerLevelUp() {
 function triggerGameOver() {
   game.state='gameover'; player.dead=true;
   document.getElementById('go-stats').innerHTML =
-    `ВОЛНА  ${game.wave}<br>СЧЁТ  ${game.score}<br>УБИТО  ${game.kills}<br>ОТРАЖЕНО  ${game.deflections}<br>КОМБО МАКС  ${game.combo}<br>ВРЕМЯ  ${game.time.toFixed(0)}с`;
+    `ВОЛНА  ${game.wave}<br>СЧЁТ  ${game.score}<br>УБИТО  ${game.kills}<br>ОТРАЖЕНО  ${game.deflections}<br>ИДЕАЛЬНЫХ  ${game.perfectDeflects||0}<br>КОМБО МАКС  ${game.combo}<br>ВРЕМЯ  ${game.time.toFixed(0)}с`;
   document.getElementById('gameover-panel').style.display='block';
+  stopSaberHum();
 }
 
 function resetGame() {
@@ -1656,11 +1785,12 @@ function resetGame() {
   Object.assign(game, {
     state:'playing', xp:0, xpToNext:40, level:1,
     score:0, wave:1, waveTimer:0, waveDuration:22,
-    deflections:0, kills:0,
+    deflections:0, perfectDeflects:0, kills:0,
     screenFlash:0, screenShake:0, shakeX:0, shakeY:0,
     forcePushCooldown:0, time:0,
     combo:0, comboTimer:0,
     waveClearBanner:0, waveClearText:'',
+    slowMoTimer:0, hitStop:0,
   });
   spawnWave(1);
 }
@@ -1670,10 +1800,12 @@ document.getElementById('start-btn').addEventListener('click', () => {
   initAudio();
   document.getElementById('startscreen-panel').style.display='none';
   resetGame();
+  startSaberHum();
 });
 document.getElementById('restart-btn').addEventListener('click', () => {
   document.getElementById('gameover-panel').style.display='none';
   resetGame();
+  startSaberHum();
 });
 
 // ─── MAIN GAME LOOP ───────────────────────────────────────────────────────────
@@ -1724,6 +1856,7 @@ function update(dt) {
   player.bodyAngle += angDiff(player.bodyAngle,targetBody)*Math.min(1,6*dt);
 
   updateSaberAim(dt);
+  updateSaberHum();
   updateBullets(dt);
   updateEnemies(dt, game.wave);
   updateXPOrbs(dt);
@@ -1843,8 +1976,18 @@ function loop(ts) {
     drawStars(dt); ctx.restore();
     return;
   }
-  update(dt);
-  render(dt);
+  if (game.hitStop > 0) {
+    game.hitStop -= dt;
+    render(0);
+    return;
+  }
+  let effDt = dt;
+  if (game.slowMoTimer > 0) {
+    game.slowMoTimer -= dt;
+    effDt = dt * CFG.slowMoFactor;
+  }
+  update(effDt);
+  render(effDt);
 }
 
 requestAnimationFrame(ts => { lastTime=ts; requestAnimationFrame(loop); });
