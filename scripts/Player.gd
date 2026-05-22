@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 signal hp_changed(current: float, maximum: float)
 signal died
+signal screen_shake(intensity: float)
 
 var hp: float = 100.0
 var max_hp: float = 100.0
@@ -9,6 +10,11 @@ var attack_timer: float = 0.0
 var regen_timer: float = 0.0
 var shield_timer: float = 0.0
 var shield_active: bool = false
+
+# Sword visual state
+var sword_angle: float = -PI / 2.0
+var is_spinning: bool = false
+var spin_progress: float = 0.0
 
 @onready var attack_area: Area2D = $AttackArea
 @onready var pickup_area: Area2D = $PickupArea
@@ -19,24 +25,49 @@ func _ready() -> void:
 	add_to_group("player")
 	max_hp = GameManager.stats.max_hp
 	hp = max_hp
+	$CollisionShape2D.shape.radius = 22.0
 	_update_areas()
 
 func _draw() -> void:
-	# Body
-	draw_rect(Rect2(-15, -14, 30, 28), Color(0.15, 0.45, 0.85))
-	draw_rect(Rect2(-10, -20, 20, 10), Color(0.2, 0.55, 0.9))
-	# Lightsaber — layered glow
-	draw_line(Vector2(0, -14), Vector2(0, -42), Color(0.2, 0.6, 1.0, 0.25), 12)
-	draw_line(Vector2(0, -14), Vector2(0, -42), Color(0.4, 0.8, 1.0, 0.55), 6)
-	draw_line(Vector2(0, -14), Vector2(0, -42), Color(0.85, 1.0, 1.0, 0.9), 2)
-	# Handle
-	draw_rect(Rect2(-3, -8, 6, 8), Color(0.5, 0.5, 0.55))
+	# Robe body
+	draw_rect(Rect2(-22, -10, 44, 42), Color(0.20, 0.22, 0.30))
+	# Tunic
+	draw_rect(Rect2(-16, -10, 32, 36), Color(0.28, 0.30, 0.40))
+	# Belt
+	draw_rect(Rect2(-18, 14, 36, 7), Color(0.45, 0.35, 0.18))
+	# Head
+	draw_circle(Vector2(0, -24), 18, Color(0.72, 0.60, 0.48))
+	# Hood
+	draw_arc(Vector2(0, -24), 20, PI + 0.3, TAU - 0.3, 24, Color(0.20, 0.22, 0.30), 6)
 	# Eyes
-	draw_rect(Rect2(-7, -10, 5, 4), Color(0.9, 1.0, 1.0))
-	draw_rect(Rect2(2, -10, 5, 4), Color(0.9, 1.0, 1.0))
-	# Shield indicator
+	draw_rect(Rect2(-9, -28, 6, 4), Color(0.1, 0.5, 1.0))
+	draw_rect(Rect2(3, -28, 6, 4), Color(0.1, 0.5, 1.0))
+	# Legs
+	draw_rect(Rect2(-18, 32, 16, 14), Color(0.18, 0.20, 0.28))
+	draw_rect(Rect2(2, 32, 16, 14), Color(0.18, 0.20, 0.28))
+
+	# Lightsaber — pointing at sword_angle
+	var sw = Vector2.from_angle(sword_angle)
+	var hilt_start := sw * 14
+	var hilt_end   := sw * 22
+	var blade_end  := sw * 64
+
+	# Handle
+	draw_line(hilt_start, hilt_end, Color(0.55, 0.55, 0.60), 6)
+	# Outer glow (wide, transparent)
+	draw_line(hilt_end, blade_end, Color(0.15, 0.55, 1.0, 0.18), 22)
+	# Mid glow
+	draw_line(hilt_end, blade_end, Color(0.25, 0.70, 1.0, 0.45), 12)
+	# Inner glow
+	draw_line(hilt_end, blade_end, Color(0.50, 0.90, 1.0, 0.70), 6)
+	# Core blade
+	draw_line(hilt_end, blade_end, Color(0.90, 1.00, 1.0, 0.95), 2)
+	# Tip spark
+	draw_circle(blade_end, 4, Color(0.80, 1.00, 1.0, 0.60))
+
+	# Shield ring
 	if shield_active:
-		draw_arc(Vector2.ZERO, 22, 0, TAU, 32, Color(0.3, 0.8, 1.0, 0.5), 3)
+		draw_arc(Vector2.ZERO, 30, 0, TAU, 48, Color(0.3, 0.8, 1.0, 0.55), 3)
 
 func _update_areas() -> void:
 	if attack_shape and attack_shape.shape:
@@ -48,23 +79,40 @@ func _process(delta: float) -> void:
 	if GameManager.is_game_over:
 		return
 
+	# Regen
 	if GameManager.stats.regen > 0:
 		regen_timer += delta
 		if regen_timer >= 1.0:
 			regen_timer = 0.0
 			heal(GameManager.stats.regen)
 
+	# Shield recharge
 	if GameManager.stats.shield_cooldown > 0 and not shield_active:
 		shield_timer += delta
 		if shield_timer >= GameManager.stats.shield_cooldown:
 			shield_timer = 0.0
 			shield_active = true
-			queue_redraw()
 
+	# Auto attack
 	attack_timer += delta
 	if attack_timer >= 1.0 / GameManager.stats.attack_speed:
 		attack_timer = 0.0
 		_do_attack()
+
+	# Sword animation
+	if is_spinning:
+		spin_progress += delta * 10.0
+		sword_angle = spin_progress
+		if spin_progress >= TAU:
+			is_spinning = false
+			spin_progress = 0.0
+	else:
+		var nearest := _get_nearest_enemy()
+		if nearest:
+			var target := (nearest.position - position).angle()
+			sword_angle = lerp_angle(sword_angle, target, delta * 7.0)
+
+	queue_redraw()
 
 func _physics_process(_delta: float) -> void:
 	if GameManager.is_game_over or GameManager.is_paused:
@@ -79,8 +127,8 @@ func _physics_process(_delta: float) -> void:
 
 	velocity = dir.normalized() * GameManager.stats.move_speed
 	move_and_slide()
-	position.x = clamp(position.x, 32, 1248)
-	position.y = clamp(position.y, 32, 688)
+	position.x = clamp(position.x, 40, 1240)
+	position.y = clamp(position.y, 40, 680)
 
 func _do_attack() -> void:
 	var bodies := attack_area.get_overlapping_bodies()
@@ -88,28 +136,43 @@ func _do_attack() -> void:
 	if enemies.is_empty():
 		return
 
+	# Spin the blade on attack
+	is_spinning = true
+	spin_progress = sword_angle
+
 	enemies.sort_custom(func(a, b):
 		return position.distance_to(a.position) < position.distance_to(b.position)
 	)
-
-	var hits := mini(GameManager.stats.multi_attack, enemies.size())
-	for i in hits:
+	for i in mini(GameManager.stats.multi_attack, enemies.size()):
 		enemies[i].take_damage(GameManager.stats.attack_damage)
+
+func _get_nearest_enemy() -> Node:
+	var container := get_tree().get_first_node_in_group("enemies_container")
+	if not container:
+		return null
+	var nearest: Node = null
+	var nearest_dist := INF
+	for enemy in container.get_children():
+		var d := position.distance_to(enemy.position)
+		if d < nearest_dist:
+			nearest_dist = d
+			nearest = enemy
+	return nearest
 
 func take_damage(amount: float) -> void:
 	if shield_active:
 		shield_active = false
 		shield_timer = 0.0
-		queue_redraw()
 		return
 
 	hp -= amount
 	hp = maxf(0.0, hp)
 	hp_changed.emit(hp, max_hp)
+	screen_shake.emit(6.0)
 
-	modulate = Color(1, 0.25, 0.25)
+	modulate = Color(1, 0.2, 0.2)
 	var tw := create_tween()
-	tw.tween_property(self, "modulate", Color.WHITE, 0.25)
+	tw.tween_property(self, "modulate", Color.WHITE, 0.22)
 
 	if hp <= 0:
 		died.emit()
@@ -124,4 +187,3 @@ func apply_upgrades() -> void:
 	hp = minf(hp, max_hp)
 	hp_changed.emit(hp, max_hp)
 	_update_areas()
-	queue_redraw()
