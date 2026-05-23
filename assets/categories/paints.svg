@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" aria-label="Лакокрасочные материалы">
+  <rect width="200" height="140" fill="#FFE9E0"/>
+  <!-- Bucket 1 -->
+  <g transform="translate(30,40)">
+    <path d="M5,12 L55,12 L52,70 L8,70 Z" fill="#E63946"/>
+    <ellipse cx="30" cy="12" rx="25" ry="5" fill="#0F1B2D"/>
+    <rect x="14" y="34" width="32" height="14" fill="#fff"/>
+  </g>
+  <!-- Bucket 2 -->
+  <g transform="translate(90,30)">
+    <path d="M5,12 L65,12 L61,82 L9,82 Z" fill="#2A9D8F"/>
+    <ellipse cx="35" cy="12" rx="30" ry="6" fill="#0F1B2D"/>
+    <rect x="14" y="38" width="42" height="16" fill="#fff"/>
+  </g>
+  <!-- Brush -->
+  <g transform="translate(150,55)">
+    <rect x="0" y="0" width="32" height="14" fill="#8B5E3C"/>
+    <rect x="0" y="14" width="32" height="16" fill="#0F1B2D"/>
+    <path d="M0,30 Q4,42 16,44 Q28,42 32,30 Z" fill="#F77F00"/>
+  </g>
+</svg>

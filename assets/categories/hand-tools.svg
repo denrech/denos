@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" aria-label="Ручной инструмент">
+  <rect width="200" height="140" fill="#EAF1FA"/>
+  <!-- Hammer -->
+  <g transform="translate(30,30) rotate(-15 40 40)">
+    <rect x="20" y="50" width="60" height="8" rx="2" fill="#8B5E3C"/>
+    <rect x="0" y="38" width="34" height="30" rx="4" fill="#0F1B2D"/>
+    <rect x="32" y="44" width="6" height="18" fill="#0F1B2D"/>
+  </g>
+  <!-- Screwdriver -->
+  <g transform="translate(80,30) rotate(25 40 40)">
+    <rect x="20" y="58" width="60" height="6" fill="#cfd6e0"/>
+    <rect x="0" y="50" width="28" height="22" rx="6" fill="#F77F00"/>
+    <rect x="78" y="58" width="14" height="6" fill="#9aa3ad"/>
+  </g>
+  <!-- Wrench -->
+  <g transform="translate(20,80) rotate(40 40 20)">
+    <rect x="20" y="14" width="56" height="10" rx="3" fill="#0F1B2D"/>
+    <path d="M14,4 a16,16 0 1,0 0,30 l0,-8 a8,8 0 1,1 0,-14 z" fill="#0F1B2D"/>
+    <path d="M82,4 a16,16 0 1,1 0,30 l0,-8 a8,8 0 1,0 0,-14 z" fill="#0F1B2D"/>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" aria-label="Сухие смеси">
+  <rect width="200" height="140" fill="#EDE7DA"/>
+  <!-- Bag of cement -->
+  <g transform="translate(50,18)">
+    <path d="M0,12 Q50,0 100,12 L96,110 Q50,118 4,110 Z" fill="#0F1B2D"/>
+    <path d="M0,12 Q50,0 100,12 L96,32 Q50,22 4,32 Z" fill="#1d2c4a"/>
+    <rect x="20" y="42" width="60" height="22" fill="#fff"/>
+    <text x="50" y="58" font-family="Arial,sans-serif" font-size="14" font-weight="800" fill="#0F1B2D" text-anchor="middle">M-500</text>
+    <rect x="30" y="72" width="40" height="6" fill="#F77F00"/>
+    <rect x="34" y="84" width="32" height="4" fill="#fff"/>
+  </g>
+</svg>

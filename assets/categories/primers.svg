@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" aria-label="Грунтовки и клеи">
+  <rect width="200" height="140" fill="#FFF7E8"/>
+  <!-- Big bucket -->
+  <g transform="translate(60,28)">
+    <path d="M5,18 L75,18 L70,98 L10,98 Z" fill="#F77F00"/>
+    <ellipse cx="40" cy="18" rx="35" ry="6" fill="#ffa845"/>
+    <ellipse cx="40" cy="18" rx="28" ry="4" fill="#0F1B2D"/>
+    <path d="M0,22 q40,-10 80,0" fill="none" stroke="#0F1B2D" stroke-width="3" stroke-linecap="round"/>
+    <rect x="18" y="48" width="44" height="24" rx="2" fill="#fff"/>
+    <text x="40" y="65" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#0F1B2D" text-anchor="middle">GRUNT</text>
+  </g>
+  <!-- Small tube -->
+  <g transform="translate(20,70)">
+    <rect x="0" y="0" width="22" height="50" rx="4" fill="#0F1B2D"/>
+    <rect x="6" y="-6" width="10" height="10" rx="2" fill="#cfd6e0"/>
+  </g>
+</svg>

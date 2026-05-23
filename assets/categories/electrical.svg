@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" aria-label="Электрика">
+  <rect width="200" height="140" fill="#FFF6DA"/>
+  <!-- Bulb -->
+  <g transform="translate(70,20)">
+    <path d="M30,4 Q4,10 4,36 Q4,52 22,62 L22,72 L38,72 L38,62 Q56,52 56,36 Q56,10 30,4 Z" fill="#F77F00"/>
+    <rect x="22" y="72" width="16" height="10" fill="#9aa3ad"/>
+    <rect x="22" y="82" width="16" height="4" fill="#0F1B2D"/>
+    <rect x="24" y="86" width="12" height="3" fill="#0F1B2D"/>
+    <rect x="25" y="89" width="10" height="3" fill="#0F1B2D"/>
+    <!-- glow -->
+    <line x1="30" y1="0" x2="30" y2="-8" stroke="#F77F00" stroke-width="2" stroke-linecap="round"/>
+    <line x1="60" y1="20" x2="68" y2="14" stroke="#F77F00" stroke-width="2" stroke-linecap="round"/>
+    <line x1="0" y1="20" x2="-8" y2="14" stroke="#F77F00" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- Cable -->
+  <path d="M20,120 Q60,100 100,120 T180,120" fill="none" stroke="#0F1B2D" stroke-width="6" stroke-linecap="round"/>
+</svg>

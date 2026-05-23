@@ -1,44 +1,41 @@
-# Jedi Deflector
+# DamuMarket — лендинг строительного магазина
 
-A browser-based bullet-hell game with a deflection mechanic, set in a dark neon Cyberpunk–Star Wars aesthetic.
+Сайт-витрина магазина строительных материалов **DamuMarket** в Алматы (Васнецова, 43). Чистый статический HTML/CSS/JS, без сборки и без бэкенда. Все заявки уходят в WhatsApp `+7 700 215 2893`.
 
-## How to play
+## Структура
 
-Open `index.html` in any modern browser. No server, no build step required.
+```
+index.html          — главная страница DamuMarket
+styles.css          — стили (mobile-first)
+script.js           — burger, WhatsApp deep-links, quick-form
+assets/
+  categories/       — SVG-иллюстрации категорий (заглушки)
+  icons/            — иконки интерфейса
+CONTENT.md          — как менять текст, телефон, категории
+IMAGES.md           — список слотов под фото + AI-промты
+game/               — мини-игра Jedi Deflector (бонус разработчика)
+```
 
-### Controls
+## Локальный запуск
 
-| Key | Action |
-|-----|--------|
-| WASD / Arrow keys | Move |
-| Lightsaber | Auto-tracks nearest incoming bolt |
-| SPACE | Force Push (after upgrade) |
+```bash
+python3 -m http.server 8000
+# открыть http://localhost:8000
+```
 
-### Core mechanic
+Никаких npm-зависимостей. Открывается также прямо из файла (`file://`), но карта 2ГИС и WhatsApp-ссылки работают только при открытии через сервер.
 
-Your lightsaber automatically rotates toward the nearest laser bolt. Position yourself so the saber intercepts incoming fire — the bolt deflects back at full speed and kills the enemy that fired it.
+## Публикация на GitHub Pages
 
-### Upgrades
+1. Закоммитьте и запушьте на GitHub.
+2. Repo → **Settings → Pages**.
+3. Source: **Deploy from a branch**, Branch: `main` (или `claude/damu-market-landing-gKqb2` для превью), папка `/ (root)`.
+4. Через 1–2 минуты сайт доступен по адресу `https://<username>.github.io/denos/`.
 
-On level up, choose one of three random upgrades:
+## Как менять контент
 
-- **Longer Blade** — bigger deflection zone
-- **Quick Reflex** — saber tracks threats faster
-- **Force Shield** — absorbs one hit every 8 seconds
-- **Pierce Shot** — deflected bolts punch through multiple enemies
-- **Force Spin** — every deflection triggers a brief 360° saber sweep
-- **Force Healing** — regenerate 1 HP per second
-- **Danger Sense** — saber auto-aims from farther away
-- **Speed Boost** — move faster
-- **Force Push** — [SPACE] launches all nearby bolts outward
-- **Force Mastery** — +50% XP from all kills
+См. [CONTENT.md](CONTENT.md). Картинки и промты — см. [IMAGES.md](IMAGES.md).
 
-### Enemy types
+## Мини-игра
 
-| Type | Notes |
-|------|-------|
-| B1 Droid | Basic, slow single shots |
-| Commando Droid | Fast, rapid fire |
-| Super Battle Droid | Tanky, 3-bolt burst; spawns as boss every 3 waves |
-
-Waves escalate in enemy count and bolt speed. Survive as long as possible.
+[Jedi Deflector](game/) — отдельный проект, лежит в `game/`.

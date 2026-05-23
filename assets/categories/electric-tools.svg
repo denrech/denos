@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" aria-label="Электроинструмент">
+  <defs>
+    <linearGradient id="etBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF4E5"/>
+      <stop offset="1" stop-color="#FFE4BC"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="140" fill="url(#etBg)"/>
+  <!-- Drill body -->
+  <g transform="translate(35,40)">
+    <rect x="0" y="10" width="80" height="36" rx="6" fill="#0F1B2D"/>
+    <rect x="78" y="18" width="40" height="20" rx="3" fill="#1d2c4a"/>
+    <circle cx="118" cy="28" r="6" fill="#F77F00"/>
+    <rect x="14" y="46" width="22" height="32" rx="4" fill="#0F1B2D"/>
+    <rect x="14" y="74" width="22" height="6" rx="2" fill="#F77F00"/>
+    <!-- drill bit -->
+    <rect x="118" y="25" width="34" height="6" fill="#c9c9c9"/>
+    <polygon points="152,22 162,28 152,34" fill="#8a8a8a"/>
+    <!-- trigger -->
+    <rect x="22" y="38" width="10" height="14" rx="2" fill="#F77F00"/>
+  </g>
+</svg>
