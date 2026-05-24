@@ -1,0 +1,21 @@
+{
+  "name": "vitalik-intro",
+  "version": "1.0.0",
+  "description": "Remotion animation for Vitalik Buterin YouTube intro",
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.465",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.465"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.3",
+    "@types/web": "0.0.155",
+    "typescript": "5.4.5"
+  }
+}
