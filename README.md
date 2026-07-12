@@ -1,3 +1,10 @@
+# denos
+
+Projects in this repo:
+
+- **Jedi Deflector** — browser bullet-hell game (`index.html`, see below).
+- **WristAI** — voice AI assistant app for Apple Watch (see [`WristAI/README.md`](WristAI/README.md)).
+
 # Jedi Deflector
 
 A browser-based bullet-hell game with a deflection mechanic, set in a dark neon Cyberpunk–Star Wars aesthetic.

@@ -4,3 +4,9 @@ export_presets.cfg
 *.translation
 .mono/
 mono_crash.*.json
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+.DS_Store
